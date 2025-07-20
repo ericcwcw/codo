@@ -1,3 +1,16 @@
 spring:
   application:
     name: codo
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 60000
+  datasource:
+    url: jdbc:postgresql://localhost:5432/codo_db
+    username: codo_rw
+    password: a123456
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true

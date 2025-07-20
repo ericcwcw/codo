@@ -1,0 +1,13 @@
+services:
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=codo_db'
+      - 'POSTGRES_PASSWORD=a123456'
+      - 'POSTGRES_USER=codo_rw'
+    ports:
+      - 5432:5432
+  redis:
+    image: 'redis:latest'
+    ports:
+      - 6379:6379
