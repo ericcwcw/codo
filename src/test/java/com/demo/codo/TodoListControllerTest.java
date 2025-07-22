@@ -54,7 +54,10 @@ class TodoListControllerTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/v1/todo/lists")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value("My Todo List"))
+                .andExpect(jsonPath("$.description").value("A list for important tasks"))
+                .andExpect(jsonPath("$.id").exists());
     }
 
     @Test
@@ -62,7 +65,10 @@ class TodoListControllerTest extends BaseIntegrationTest {
         mockMvc.perform(get("/api/v1/todo/lists")
                 .param("page", "0")
                 .param("size", "10"))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.pageable").exists())
+                .andExpect(jsonPath("$.totalElements").exists());
     }
 
     @Test
@@ -70,7 +76,7 @@ class TodoListControllerTest extends BaseIntegrationTest {
         UUID listId = UUID.randomUUID();
         
         mockMvc.perform(get("/api/v1/todo/lists/{id}", listId))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -84,7 +90,7 @@ class TodoListControllerTest extends BaseIntegrationTest {
         mockMvc.perform(put("/api/v1/todo/lists/{id}", listId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -92,6 +98,6 @@ class TodoListControllerTest extends BaseIntegrationTest {
         UUID listId = UUID.randomUUID();
 
         mockMvc.perform(delete("/api/v1/todo/lists/{id}", listId))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isNotFound());
     }
 }
