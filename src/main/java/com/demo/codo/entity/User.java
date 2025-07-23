@@ -21,6 +21,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Table(name = "`user`")
+@EntityListeners(AuditingEntityListener.class)
 public class User {
 
     @Id
@@ -30,6 +31,12 @@ public class User {
 
     @Column(name = "name", nullable = false, length = 255)
     private String name;
+
+    @Column(name = "email", nullable = false, length = 255, unique = true)
+    private String email;
+
+    @Column(name = "password", length = 255)
+    private String password;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
