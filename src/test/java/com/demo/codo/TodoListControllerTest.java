@@ -7,18 +7,10 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 
 import java.util.UUID;
@@ -27,8 +19,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class TodoListControllerTest extends BaseIntegrationTest {
-
-
     private MockMvc mockMvc;
     
     @Autowired
@@ -46,10 +36,7 @@ class TodoListControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldCreateTodoListSuccessfully() throws Exception {
-        TodoListRequest request = new TodoListRequest(
-            "My Todo List", 
-            "A list for important tasks"
-        );
+        var request = new TodoListRequest("My Todo List", "A list for important tasks");
 
         mockMvc.perform(post("/api/v1/todo/lists")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -82,12 +69,9 @@ class TodoListControllerTest extends BaseIntegrationTest {
     @Test
     void shouldUpdateTodoListSuccessfully() throws Exception {
         UUID listId = UUID.randomUUID();
-        TodoListRequest request = new TodoListRequest(
-            "Updated List", 
-            "Updated description"
-        );
+        var request = new TodoListRequest("Updated List", "Updated description");
 
-        mockMvc.perform(put("/api/v1/todo/lists/{id}", listId)
+        mockMvc.perform(patch("/api/v1/todo/lists/{id}", listId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
