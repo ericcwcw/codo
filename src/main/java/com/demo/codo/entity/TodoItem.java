@@ -20,6 +20,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Table(name = "todo_item")
+@EntityListeners(AuditingEntityListener.class)
 public class TodoItem {
 
     @Id
