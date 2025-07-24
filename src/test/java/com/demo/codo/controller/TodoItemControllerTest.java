@@ -109,7 +109,7 @@ class TodoItemControllerTest {
                 .andDo(print()) // This will print the full request/response details
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Complete project"))
-                .andExpect(jsonPath("$.text").value("Finish the Spring Boot project"))
+                .andExpect(jsonPath("$.description").value("Finish the Spring Boot project"))
                 .andExpect(jsonPath("$.status").value("PENDING"))
                 .andExpect(jsonPath("$.id").exists());
     }
@@ -135,7 +135,7 @@ class TodoItemControllerTest {
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Test task"))
-                .andExpect(jsonPath("$.text").value("Description"))
+                .andExpect(jsonPath("$.description").value("Description"))
                 .andExpect(jsonPath("$.status").value("PENDING"));
     }
 
@@ -160,7 +160,7 @@ class TodoItemControllerTest {
                 .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Updated task"))
-                .andExpect(jsonPath("$.text").value("Updated text"))
+                .andExpect(jsonPath("$.description").value("Updated text"))
                 .andExpect(jsonPath("$.status").value("COMPLETED"));
     }
 

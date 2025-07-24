@@ -34,8 +34,8 @@ public class TodoItem {
     @Column(name = "name", nullable = false, length = 255)
     private String name;
 
-    @Column(name = "text", columnDefinition = "TEXT")
-    private String text;
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
 
     @Column(name = "due_date")
     private LocalDate dueDate;

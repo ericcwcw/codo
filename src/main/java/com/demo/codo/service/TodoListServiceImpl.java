@@ -38,7 +38,7 @@ public class TodoListServiceImpl implements TodoListService {
     }
 
     @Override
-    public Optional<TodoListDto> get(UUID id) {
+    public Optional<TodoListDto> find(UUID id) {
         return repository.findById(id).map(mapper::toDto);
     }
 

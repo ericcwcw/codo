@@ -15,7 +15,7 @@ public interface TodoItemService {
 
     Page<TodoItemDto> getAll(UUID listId, String status, LocalDate dueDateFrom, LocalDate dueDateTo, Pageable pageable);
     
-    Optional<TodoItemDto> get(UUID listId, UUID id);
+    Optional<TodoItemDto> find(UUID listId, UUID id);
 
     TodoItemDto update(UUID listId, UUID id, TodoItemRequest request);
 

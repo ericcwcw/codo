@@ -79,7 +79,7 @@ public class TodoListController {
     public ResponseEntity<TodoListResponse> get(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID id) {
-        return service.get(id).map(dto -> ResponseEntity.ok(mapper.toResponse(dto))).orElse(ResponseEntity.notFound().build());
+        return service.find(id).map(dto -> ResponseEntity.ok(mapper.toResponse(dto))).orElse(ResponseEntity.notFound().build());
     }
 
     @Operation(summary = "Update todo list", description = "Update an existing todo list with new information")

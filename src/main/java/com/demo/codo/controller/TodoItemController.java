@@ -54,7 +54,7 @@ public class TodoItemController {
                     content = @Content)
     })
     @PostMapping
-    public ResponseEntity<TodoItemResponse> createItem(
+    public ResponseEntity<TodoItemResponse> create(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID listId,
             @Parameter(description = "Todo item information", required = true)
@@ -75,7 +75,7 @@ public class TodoItemController {
                     content = @Content)
     })
     @GetMapping
-    public ResponseEntity<Page<TodoItemResponse>> getItems(
+    public ResponseEntity<Page<TodoItemResponse>> getAll(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID listId,
             @Parameter(description = "Filter by item status (PENDING, IN_PROGRESS, COMPLETED)")
@@ -102,12 +102,12 @@ public class TodoItemController {
                     content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity<TodoItemResponse> getItem(
+    public ResponseEntity<TodoItemResponse> get(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID listId,
             @Parameter(description = "Todo item unique identifier", required = true)
             @PathVariable UUID id) {
-        return service.get(listId, id)
+        return service.find(listId, id)
                 .map(itemDto -> {
                     TodoItemResponse itemResponse = mapper.toResponse(itemDto);
                     return ResponseEntity.ok(itemResponse);
@@ -128,7 +128,7 @@ public class TodoItemController {
                     content = @Content)
     })
     @PutMapping("/{id}")
-    public ResponseEntity<TodoItemResponse> updateItem(
+    public ResponseEntity<TodoItemResponse> update(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID listId,
             @Parameter(description = "Todo item unique identifier", required = true)
@@ -150,7 +150,7 @@ public class TodoItemController {
                     content = @Content)
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteItem(
+    public ResponseEntity<Void> delete(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID listId,
             @Parameter(description = "Todo item unique identifier", required = true)

@@ -15,7 +15,7 @@ public interface TodoListService {
 
     Page<TodoListDto> getAll(Pageable pageable);
     
-    Optional<TodoListDto> get(UUID id);
+    Optional<TodoListDto> find(UUID id);
 
     TodoListDto update(UUID id, TodoListRequest request);
 

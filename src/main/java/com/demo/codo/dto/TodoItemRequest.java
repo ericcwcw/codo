@@ -24,7 +24,7 @@ public class TodoItemRequest {
     private String name;
     
     @Schema(description = "Detailed description of the todo item", example = "Write comprehensive documentation for the Spring Boot project")
-    private String text;
+    private String description;
     
     @Schema(description = "Due date for the todo item", example = "2024-12-31", type = "string", format = "date")
     private LocalDate dueDate;

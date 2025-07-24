@@ -17,7 +17,7 @@ public class TodoItemDto {
     private UUID id;
     private UUID listId;
     private String name;
-    private String text;
+    private String description;
     private LocalDate dueDate;
     private String status;
     private LocalDateTime createdAt;
