@@ -1,5 +1,6 @@
 package com.demo.codo.controller;
 
+import com.demo.codo.annotation.RequireAccess;
 import com.demo.codo.dto.TodoItemDto;
 import com.demo.codo.dto.TodoItemRequest;
 import com.demo.codo.dto.TodoItemResponse;
@@ -54,6 +55,7 @@ public class TodoItemController {
                     content = @Content)
     })
     @PostMapping
+    @RequireAccess(value = RequireAccess.AccessType.EDIT, resourceIdParam = "listId")
     public ResponseEntity<TodoItemResponse> create(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID listId,
@@ -75,6 +77,7 @@ public class TodoItemController {
                     content = @Content)
     })
     @GetMapping
+    @RequireAccess(value = RequireAccess.AccessType.READ, resourceIdParam = "listId")
     public ResponseEntity<Page<TodoItemResponse>> getAll(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID listId,
@@ -102,6 +105,7 @@ public class TodoItemController {
                     content = @Content)
     })
     @GetMapping("/{id}")
+    @RequireAccess(value = RequireAccess.AccessType.READ, resourceIdParam = "listId")
     public ResponseEntity<TodoItemResponse> get(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID listId,
@@ -128,6 +132,7 @@ public class TodoItemController {
                     content = @Content)
     })
     @PutMapping("/{id}")
+    @RequireAccess(value = RequireAccess.AccessType.EDIT, resourceIdParam = "listId")
     public ResponseEntity<TodoItemResponse> update(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID listId,
@@ -150,6 +155,7 @@ public class TodoItemController {
                     content = @Content)
     })
     @DeleteMapping("/{id}")
+    @RequireAccess(value = RequireAccess.AccessType.EDIT, resourceIdParam = "listId")
     public ResponseEntity<Void> delete(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID listId,

@@ -1,5 +1,6 @@
 package com.demo.codo.controller;
 
+import com.demo.codo.annotation.RequireAccess;
 import com.demo.codo.dto.TodoListDto;
 import com.demo.codo.dto.TodoListRequest;
 import com.demo.codo.dto.TodoListResponse;
@@ -76,6 +77,7 @@ public class TodoListController {
                     content = @Content)
     })
     @GetMapping("/{id}")
+    @RequireAccess(value = RequireAccess.AccessType.READ, resourceIdParam = "id")
     public ResponseEntity<TodoListResponse> get(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID id) {
@@ -95,6 +97,7 @@ public class TodoListController {
                     content = @Content)
     })
     @PatchMapping("/{id}")
+    @RequireAccess(value = RequireAccess.AccessType.EDIT, resourceIdParam = "id")
     public ResponseEntity<TodoListResponse> update(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID id,
@@ -115,6 +118,7 @@ public class TodoListController {
                     content = @Content)
     })
     @DeleteMapping("/{id}")
+    @RequireAccess(value = RequireAccess.AccessType.OWNER, resourceIdParam = "id")
     public ResponseEntity<Void> delete(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID id) {

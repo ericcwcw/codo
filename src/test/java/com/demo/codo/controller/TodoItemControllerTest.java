@@ -8,6 +8,10 @@ import com.demo.codo.service.UserService;
 import com.demo.codo.service.TodoListService;
 import com.demo.codo.dto.TodoListRequest;
 import com.demo.codo.dto.TodoListDto;
+import com.demo.codo.entity.User;
+import com.demo.codo.entity.UserTodoList;
+import com.demo.codo.repository.UserRepository;
+import com.demo.codo.repository.UserTodoListRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,6 +57,12 @@ class TodoItemControllerTest {
     
     @Autowired
     private TodoListService todoListService;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private UserTodoListRepository userTodoListRepository;
 
     private ObjectMapper objectMapper;
 
@@ -90,6 +100,42 @@ class TodoItemControllerTest {
         System.out.println("Created TodoList: " + createdList);
         testListId = createdList.getId();
         System.out.println("testListId set to: " + testListId);
+        
+        // Manually create owner record for test user (since no authentication context in tests)
+        User testUser = userRepository.findByEmail(TEST_EMAIL)
+                .orElseThrow(() -> new RuntimeException("Test user not found"));
+        
+        UserTodoList ownerRecord = UserTodoList.builder()
+                .userId(testUser.getId())
+                .listId(testListId)
+                .isOwner(true)
+                .isEditable(true)
+                .build();
+        
+        userTodoListRepository.save(ownerRecord);
+        System.out.println("Created owner record for test user");
+    }
+    
+    /**
+     * Helper method to create a TodoList with proper owner record for tests
+     */
+    private TodoListDto createTodoListWithOwner(String name, String description) {
+        TodoListRequest request = new TodoListRequest(name, description);
+        TodoListDto createdList = todoListService.create(request);
+        
+        // Create owner record for test user
+        User testUser = userRepository.findByEmail(TEST_EMAIL)
+                .orElseThrow(() -> new RuntimeException("Test user not found"));
+        
+        UserTodoList ownerRecord = UserTodoList.builder()
+                .userId(testUser.getId())
+                .listId(createdList.getId())
+                .isOwner(true)
+                .isEditable(true)
+                .build();
+        
+        userTodoListRepository.save(ownerRecord);
+        return createdList;
     }
 
     @Test
@@ -216,9 +262,9 @@ class TodoItemControllerTest {
 
     @Test
     void shouldFilterTodoItemsByListId() throws Exception {
-        // Create two TodoLists first
-        TodoListDto list1 = todoListService.create(new TodoListRequest("Test List 1", "First test list"));
-        TodoListDto list2 = todoListService.create(new TodoListRequest("Test List 2", "Second test list"));
+        // Create two TodoLists first with proper owner records
+        TodoListDto list1 = createTodoListWithOwner("Test List 1", "First test list");
+        TodoListDto list2 = createTodoListWithOwner("Test List 2", "Second test list");
         
         UUID listId1 = list1.getId();
         UUID listId2 = list2.getId();

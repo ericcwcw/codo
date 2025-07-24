@@ -1,6 +1,7 @@
 package com.demo.codo.controller;
 
 import com.demo.codo.dto.UserRequest;
+import com.demo.codo.dto.UserResponse;
 import com.demo.codo.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,9 +14,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
@@ -47,5 +50,25 @@ public class UserController {
             @Valid @RequestBody UserRequest request) {
         service.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @Operation(summary = "Search user by email", description = "Find a user by their email address")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User found",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserResponse.class))),
+            @ApiResponse(responseCode = "404", description = "User not found",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(example = "{\"message\": \"User not found with email: user@example.com\"}"))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required",
+                    content = @Content)
+    })
+    @GetMapping("/search")
+    public ResponseEntity<UserResponse> searchByEmail(
+            @Parameter(description = "Email address to search for", required = true, example = "john.doe@example.com")
+            @RequestParam String email) {
+        return service.findByEmail(email)
+                .map(user -> ResponseEntity.ok(user))
+                .orElse(ResponseEntity.notFound().build());
     }
 }

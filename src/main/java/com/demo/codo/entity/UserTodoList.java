@@ -18,12 +18,16 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Table(name = "user_todo_list")
+@EntityListeners(AuditingEntityListener.class)
 public class UserTodoList {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
     private UUID id;
+
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
 
     @Column(name = "list_id", nullable = false)
     private UUID listId;
@@ -43,6 +47,10 @@ public class UserTodoList {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "list_id", insertable = false, updatable = false)

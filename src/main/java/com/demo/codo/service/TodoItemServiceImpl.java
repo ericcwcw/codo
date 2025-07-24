@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -104,4 +105,6 @@ public class TodoItemServiceImpl implements TodoItemService {
         return repository.findByIdAndTodoListId(id, listId)
                 .orElseThrow(() -> new NotFoundException("Todo item not found, id=" + id + ", listId=" + listId));
     }
+    
+
 }

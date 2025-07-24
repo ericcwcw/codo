@@ -1,6 +1,7 @@
 package com.demo.codo.service;
 
 import com.demo.codo.dto.UserRequest;
+import com.demo.codo.dto.UserResponse;
 import com.demo.codo.entity.User;
 import com.demo.codo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,5 +27,18 @@ public class UserService {
                     .build();
             userRepository.save(newUser);
         }
+    }
+
+    public Optional<UserResponse> findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .map(this::mapToUserResponse);
+    }
+
+    private UserResponse mapToUserResponse(User user) {
+        return UserResponse.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .build();
     }
 }
