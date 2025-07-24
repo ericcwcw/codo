@@ -1,13 +1,16 @@
 package com.demo.codo;
 
+import com.redis.testcontainers.RedisContainer;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.utility.DockerImageName;
 
 @TestConfiguration(proxyBeanMethods = false)
 public class TestContainerConfiguration {
+    
     @Bean
     @ServiceConnection
     PostgreSQLContainer<?> postgreSQLContainer() {
@@ -15,6 +18,14 @@ public class TestContainerConfiguration {
                 .withDatabaseName("testdb")
                 .withUsername("test")
                 .withPassword("test")
+                .waitingFor(Wait.defaultWaitStrategy());
+    }
+    
+    @Bean
+    @ServiceConnection
+    RedisContainer redisContainer() {
+        return new RedisContainer(DockerImageName.parse("redis:7.2-alpine"))
+                .withExposedPorts(6379)
                 .waitingFor(Wait.defaultWaitStrategy());
     }
 }
