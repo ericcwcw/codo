@@ -1,6 +1,6 @@
 package com.demo.codo.controller;
 
-import com.demo.codo.annotation.RequireAccess;
+import com.demo.codo.annotation.RequireListPermission;
 import com.demo.codo.dto.TodoItemDto;
 import com.demo.codo.dto.TodoItemRequest;
 import com.demo.codo.dto.TodoItemResponse;
@@ -15,22 +15,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -56,7 +48,7 @@ public class TodoItemController {
                     content = @Content)
     })
     @PostMapping
-    @RequireAccess(value = RequireAccess.AccessType.EDIT)
+    @RequireListPermission(RequireListPermission.Permission.EDIT)
     public ResponseEntity<TodoItemResponse> create(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID listId,
@@ -78,7 +70,7 @@ public class TodoItemController {
                     content = @Content)
     })
     @GetMapping
-    @RequireAccess(value = RequireAccess.AccessType.READ, resourceIdParam = "listId")
+    @RequireListPermission(RequireListPermission.Permission.READ)
     public ResponseEntity<Page<TodoItemResponse>> getAll(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID listId,
@@ -106,7 +98,7 @@ public class TodoItemController {
                     content = @Content)
     })
     @GetMapping("/{id}")
-    @RequireAccess(value = RequireAccess.AccessType.READ, resourceIdParam = "listId")
+    @RequireListPermission(RequireListPermission.Permission.READ)
     public ResponseEntity<TodoItemResponse> get(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID listId,
@@ -133,7 +125,7 @@ public class TodoItemController {
                     content = @Content)
     })
     @PutMapping("/{id}")
-    @RequireAccess(value = RequireAccess.AccessType.EDIT, resourceIdParam = "listId")
+    @RequireListPermission(RequireListPermission.Permission.EDIT)
     public ResponseEntity<TodoItemResponse> update(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID listId,
@@ -156,7 +148,7 @@ public class TodoItemController {
                     content = @Content)
     })
     @DeleteMapping("/{id}")
-    @RequireAccess(value = RequireAccess.AccessType.EDIT, resourceIdParam = "listId")
+    @RequireListPermission(RequireListPermission.Permission.EDIT)
     public ResponseEntity<Void> delete(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID listId,

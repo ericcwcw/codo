@@ -1,6 +1,7 @@
 package com.demo.codo.controller;
 
-import com.demo.codo.annotation.RequireAccess;
+import com.demo.codo.annotation.RequireListPermission;
+import com.demo.codo.annotation.RequireListPermission.Permission;
 import com.demo.codo.dto.TodoListDto;
 import com.demo.codo.dto.TodoListRequest;
 import com.demo.codo.dto.TodoListResponse;
@@ -17,9 +18,16 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
@@ -76,12 +84,12 @@ public class TodoListController {
             @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required",
                     content = @Content)
     })
-    @GetMapping("/{id}")
-    @RequireAccess(value = RequireAccess.AccessType.READ, resourceIdParam = "id")
+    @GetMapping("/{listId}")
+    @RequireListPermission(Permission.READ)
     public ResponseEntity<TodoListResponse> get(
             @Parameter(description = "Todo list unique identifier", required = true)
-            @PathVariable UUID id) {
-        return service.find(id).map(dto -> ResponseEntity.ok(mapper.toResponse(dto))).orElse(ResponseEntity.notFound().build());
+            @PathVariable UUID listId) {
+        return service.find(listId).map(dto -> ResponseEntity.ok(mapper.toResponse(dto))).orElse(ResponseEntity.notFound().build());
     }
 
     @Operation(summary = "Update todo list", description = "Update an existing todo list with new information")
@@ -96,14 +104,14 @@ public class TodoListController {
             @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required",
                     content = @Content)
     })
-    @PatchMapping("/{id}")
-    @RequireAccess(value = RequireAccess.AccessType.EDIT, resourceIdParam = "id")
+    @PatchMapping("/{listId}")
+    @RequireListPermission(Permission.EDIT)
     public ResponseEntity<TodoListResponse> update(
             @Parameter(description = "Todo list unique identifier", required = true)
-            @PathVariable UUID id,
+            @PathVariable UUID listId,
             @Parameter(description = "Updated todo list information", required = true)
             @RequestBody TodoListRequest request) {
-        TodoListDto listDto = service.update(id, request);
+        TodoListDto listDto = service.update(listId, request);
         TodoListResponse listResponse = mapper.toResponse(listDto);
         return ResponseEntity.ok(listResponse);
     }
@@ -117,12 +125,12 @@ public class TodoListController {
             @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required",
                     content = @Content)
     })
-    @DeleteMapping("/{id}")
-    @RequireAccess(value = RequireAccess.AccessType.OWNER, resourceIdParam = "id")
+    @DeleteMapping("/{listId}")
+    @RequireListPermission(Permission.OWNER)
     public ResponseEntity<Void> delete(
             @Parameter(description = "Todo list unique identifier", required = true)
-            @PathVariable UUID id) {
-        service.delete(id);
+            @PathVariable UUID listId) {
+        service.delete(listId);
         return ResponseEntity.noContent().build();
     }
 }

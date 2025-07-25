@@ -19,25 +19,19 @@ public class MockEmailSender implements EmailSender {
 
     @Override
     public void sendVerificationEmail(String toEmail, String verificationLink) {
-        try {
-            String htmlContent = buildVerificationEmailHtml(verificationLink);
-            String textContent = buildVerificationEmailText(verificationLink);
-            
-            log.info("=== EMAIL VERIFICATION (MOCK MODE) ===");
-            log.info("To: {}", toEmail);
-            log.info("From: {}", fromEmail);
-            log.info("Subject: Verify Your Email Address");
-            log.info("Verification Link: {}", verificationLink);
-            log.info("HTML Content: {}", htmlContent);
-            log.info("Text Content: {}", textContent);
-            log.info("=== END EMAIL ===");
-            
-            log.info("Mock verification email sent successfully to: {}", toEmail);
-            
-        } catch (Exception e) {
-            log.error("Failed to mock send verification email to: {}", toEmail, e);
-            throw new RuntimeException("Failed to send verification email", e);
-        }
+        String htmlContent = buildVerificationEmailHtml(verificationLink);
+        String textContent = buildVerificationEmailText(verificationLink);
+
+        log.info("=== EMAIL VERIFICATION (MOCK MODE) ===");
+        log.info("To: {}", toEmail);
+        log.info("From: {}", fromEmail);
+        log.info("Subject: Verify Your Email Address");
+        log.info("Verification Link: {}", verificationLink);
+        log.info("HTML Content: {}", htmlContent);
+        log.info("Text Content: {}", textContent);
+        log.info("=== END EMAIL ===");
+
+        log.info("Mock verification email sent successfully to: {}", toEmail);
     }
 
     private String buildVerificationEmailHtml(String verificationLink) {

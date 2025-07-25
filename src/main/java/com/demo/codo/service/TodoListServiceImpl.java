@@ -34,20 +34,6 @@ public class TodoListServiceImpl implements TodoListService {
     public TodoListDto create(TodoListRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         
-        if (authentication == null || authentication.getName() == null) {
-            TodoList newList = TodoList.builder()
-                    .name(request.getName())
-                    .description(request.getDescription())
-                    .build();
-
-            TodoList savedList = repository.save(newList);
-            return mapper.toDto(savedList);
-        }
-        
-        String userEmail = authentication.getName();
-        User currentUser = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("Current user not found: " + userEmail));
-        
         TodoList newList = TodoList.builder()
                 .name(request.getName())
                 .description(request.getDescription())
@@ -55,14 +41,23 @@ public class TodoListServiceImpl implements TodoListService {
 
         TodoList savedList = repository.save(newList);
         
-        UserTodoList ownerRecord = UserTodoList.builder()
-                .userId(currentUser.getId())
-                .listId(savedList.getId())
-                .isOwner(true)
-                .isEditable(true)
-                .build();
-        
-        userTodoListRepository.save(ownerRecord);
+        // Only create user-list relationship if user is authenticated and exists
+        if (authentication != null && authentication.getName() != null) {
+            String userEmail = authentication.getName();
+            Optional<User> currentUserOpt = userRepository.findByEmail(userEmail);
+            
+            if (currentUserOpt.isPresent()) {
+                User currentUser = currentUserOpt.get();
+                UserTodoList ownerRecord = UserTodoList.builder()
+                        .userId(currentUser.getId())
+                        .listId(savedList.getId())
+                        .isOwner(true)
+                        .isEditable(true)
+                        .build();
+                
+                userTodoListRepository.save(ownerRecord);
+            }
+        }
         
         return mapper.toDto(savedList);
     }
@@ -77,9 +72,15 @@ public class TodoListServiceImpl implements TodoListService {
         }
         
         String userEmail = authentication.getName();
-        User currentUser = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("Current user not found: " + userEmail));
+        Optional<User> currentUserOpt = userRepository.findByEmail(userEmail);
         
+        if (currentUserOpt.isEmpty()) {
+            // If user doesn't exist, return all lists (fallback behavior)
+            Page<TodoList> lists = repository.findAll(pageable);
+            return lists.map(mapper::toDto);
+        }
+        
+        User currentUser = currentUserOpt.get();
         List<UUID> accessibleListIds = userTodoListRepository.findByUserId(currentUser.getId())
                 .stream()
                 .map(UserTodoList::getListId)

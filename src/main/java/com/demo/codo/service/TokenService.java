@@ -35,24 +35,17 @@ public class TokenService {
     }
 
     public UUID verifyToken(String token) {
-        try {
-            String hashedToken = HashUtil.sha256Hex(token);
-            String redisKey = TOKEN_PREFIX + hashedToken;
-            
-            log.info("Verifying token: {}, hashedToken: {}, redisKey: {}", token, hashedToken, redisKey);
+        String hashedToken = HashUtil.sha256Hex(token);
+        String redisKey = TOKEN_PREFIX + hashedToken;
+        log.info("Verifying token: {}, hashedToken: {}, redisKey: {}", token, hashedToken, redisKey);
 
-            String userIdStr = redisTemplate.opsForValue().get(redisKey);
-            if (userIdStr != null) {
-                redisTemplate.delete(redisKey);
-                log.info("Token verified and deleted for user: {}", userIdStr);
-                return UUID.fromString(userIdStr);
-            }
-
-            log.warn("Token verification failed - token not found or expired. Expected key: {}", redisKey);
-            return null;
-        } catch (Exception e) {
-            log.error("Error verifying token", e);
-            return null;
+        String userIdStr = redisTemplate.opsForValue().get(redisKey);
+        if (userIdStr != null) {
+            redisTemplate.delete(redisKey);
+            log.info("Token verified and deleted for user: {}", userIdStr);
+            return UUID.fromString(userIdStr);
         }
+        log.warn("Token verification failed - token not found or expired. Expected key: {}", redisKey);
+        return null;
     }
 }

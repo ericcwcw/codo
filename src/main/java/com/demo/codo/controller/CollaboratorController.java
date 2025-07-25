@@ -1,10 +1,9 @@
 package com.demo.codo.controller;
 
+import com.demo.codo.annotation.RequireListPermission;
+import com.demo.codo.annotation.RequireListPermission.Permission;
 import com.demo.codo.dto.CollaboratorDto;
 import com.demo.codo.dto.CollaboratorRequest;
-import com.demo.codo.annotation.RequireAccess;
-import com.demo.codo.annotation.RequireAccess.AccessType;
-import com.demo.codo.annotation.RequireAccess.ResourceType;
 import com.demo.codo.service.CollaboratorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -38,7 +37,7 @@ public class CollaboratorController {
     private final CollaboratorService collaboratorService;
 
     @GetMapping
-    @RequireAccess(AccessType.READ)
+    @RequireListPermission(Permission.READ)
     @Operation(summary = "Get all collaborators for a todo list", description = "Retrieve all collaborators for a specific todo list")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved collaborators"),
@@ -53,7 +52,7 @@ public class CollaboratorController {
     }
 
     @PostMapping
-    @RequireAccess(AccessType.OWNER)
+    @RequireListPermission(Permission.OWNER)
     @Operation(summary = "Add a collaborator to a todo list", description = "Add a new collaborator to a specific todo list")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Collaborator successfully added"),
@@ -70,7 +69,7 @@ public class CollaboratorController {
     }
 
     @PutMapping("/{userId}")
-    @RequireAccess(AccessType.OWNER)
+    @RequireListPermission(Permission.OWNER)
     @Operation(summary = "Update a collaborator's permissions", description = "Update the permissions of an existing collaborator")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Collaborator successfully updated"),
@@ -89,7 +88,7 @@ public class CollaboratorController {
     }
 
     @DeleteMapping("/{userId}")
-    @RequireAccess(AccessType.OWNER)
+    @RequireListPermission(Permission.OWNER)
     @Operation(summary = "Remove a collaborator from a todo list", description = "Remove an existing collaborator from a specific todo list")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Collaborator successfully removed"),

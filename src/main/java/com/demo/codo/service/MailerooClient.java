@@ -32,40 +32,32 @@ public class MailerooClient implements EmailSender {
 
     @Override
     public void sendVerificationEmail(String toEmail, String verificationLink) {
-        try {
-            String htmlContent = buildVerificationEmailHtml(verificationLink);
-            String textContent = buildVerificationEmailText(verificationLink);
-            
-            MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
-            formData.add("from", "Email Verification <" + fromEmail + ">");
-            formData.add("to", toEmail);
-            formData.add("subject", "Verify Your Email Address");
-            formData.add("html", htmlContent);
-            formData.add("plain", textContent);
-            
-            // Set headers as per Maileroo API documentation
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-            headers.set("X-API-Key", apiToken);
-            
-            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
-            
-            log.info("Sending verification email to: {} via Maileroo API", toEmail);
-            
-            // Send email via Maileroo API using RestTemplate
-            ResponseEntity<String> response = restTemplate.postForEntity(MAILEROO_API_URL, request, String.class);
-            
-            if (response.getStatusCode().is2xxSuccessful()) {
-                log.info("Verification email sent successfully to: {} - Response: {}", toEmail, response.getBody());
-            } else {
-                log.error("Failed to send verification email to: {} - Status: {} - Response: {}", 
-                         toEmail, response.getStatusCode(), response.getBody());
-                throw new RuntimeException("Failed to send verification email - Status: " + response.getStatusCode());
-            }
-            
-        } catch (Exception e) {
-            log.error("Failed to send verification email to: {} via Maileroo - Error: {}", toEmail, e.getMessage(), e);
-            throw new RuntimeException("Failed to send verification email via Maileroo: " + e.getMessage(), e);
+        String htmlContent = buildVerificationEmailHtml(verificationLink);
+        String textContent = buildVerificationEmailText(verificationLink);
+
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("from", "Email Verification <" + fromEmail + ">");
+        formData.add("to", toEmail);
+        formData.add("subject", "Verify Your Email Address");
+        formData.add("html", htmlContent);
+        formData.add("plain", textContent);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.set("X-API-Key", apiToken);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
+
+        log.info("Sending verification email to: {} via Maileroo API", toEmail);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(MAILEROO_API_URL, request, String.class);
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            log.info("Verification email sent successfully to: {} - Response: {}", toEmail, response.getBody());
+        } else {
+            log.error("Failed to send verification email to: {} - Status: {} - Response: {}",
+                    toEmail, response.getStatusCode(), response.getBody());
+            throw new RuntimeException("Failed to send verification email - Status: " + response.getStatusCode());
         }
     }
 
