@@ -1,0 +1,9 @@
+app:
+  base-url: http://localhost:8080
+maileroo:
+  api:
+    token: test-api-token
+  from:
+    email: test@test.com
+  mock:
+    enabled: true

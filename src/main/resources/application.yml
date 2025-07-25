@@ -14,3 +14,14 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+app:
+  base-url: http://localhost:8080
+
+maileroo:
+  api:
+    token: ${MAILEROO_API_TOKEN:123456}
+  from:
+    email: ${MAILEROO_FROM_EMAIL:noreply@test.org}
+  mock:
+    enabled: false
