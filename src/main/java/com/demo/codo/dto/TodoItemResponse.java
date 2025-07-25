@@ -1,5 +1,6 @@
 package com.demo.codo.dto;
 
+import com.demo.codo.enums.TodoItemStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,8 +32,8 @@ public class TodoItemResponse {
     @Schema(description = "Due date for the todo item", example = "2024-12-31", type = "string", format = "date")
     private LocalDate dueDate;
     
-    @Schema(description = "Current status of the todo item", example = "PENDING", allowableValues = {"PENDING", "IN_PROGRESS", "COMPLETED"})
-    private String status;
+    @Schema(description = "Current status of the todo item", example = "TODO", allowableValues = {"TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"})
+    private TodoItemStatus status;
     
     @Schema(description = "Timestamp when the todo item was created", example = "2024-01-15T10:30:00")
     private LocalDateTime createdAt;

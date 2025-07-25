@@ -2,6 +2,7 @@ package com.demo.codo.service;
 
 import com.demo.codo.dto.TodoItemDto;
 import com.demo.codo.dto.TodoItemRequest;
+import com.demo.codo.enums.TodoItemStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -13,7 +14,7 @@ public interface TodoItemService {
 
     TodoItemDto create(UUID listId, TodoItemRequest request);
 
-    Page<TodoItemDto> getAll(UUID listId, String status, LocalDate dueDateFrom, LocalDate dueDateTo, Pageable pageable);
+    Page<TodoItemDto> getAll(UUID listId, TodoItemStatus status, LocalDate dueDateFrom, LocalDate dueDateTo, Pageable pageable);
     
     Optional<TodoItemDto> find(UUID listId, UUID id);
 

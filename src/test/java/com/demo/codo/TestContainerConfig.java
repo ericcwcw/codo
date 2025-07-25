@@ -9,7 +9,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
 @TestConfiguration(proxyBeanMethods = false)
-public class TestContainerConfiguration {
+public class TestContainerConfig {
     
     @Bean
     @ServiceConnection

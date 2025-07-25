@@ -23,4 +23,7 @@ public class UserResponse {
 
     @Schema(description = "User's email address", example = "user@example.com")
     private String email;
+
+    @Schema(description = "Whether the user's email has been verified", example = "false")
+    private Boolean emailVerified;
 }

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-07-23T10:53:58+0800",
+    date = "2025-07-25T08:01:27+0800",
     comments = "version: 1.5.5.Final, compiler: javac, environment: Java 17.0.15 (Eclipse Adoptium)"
 )
 @Component
@@ -20,9 +20,15 @@ public class TodoListMapperImpl implements TodoListMapper {
             return null;
         }
 
-        TodoListResponse todoListResponse = new TodoListResponse();
+        TodoListResponse.TodoListResponseBuilder todoListResponse = TodoListResponse.builder();
 
-        return todoListResponse;
+        todoListResponse.id( list.getId() );
+        todoListResponse.name( list.getName() );
+        todoListResponse.description( list.getDescription() );
+        todoListResponse.createdAt( list.getCreatedAt() );
+        todoListResponse.updatedAt( list.getUpdatedAt() );
+
+        return todoListResponse.build();
     }
 
     @Override
@@ -31,8 +37,14 @@ public class TodoListMapperImpl implements TodoListMapper {
             return null;
         }
 
-        TodoListDto todoListDto = new TodoListDto();
+        TodoListDto.TodoListDtoBuilder todoListDto = TodoListDto.builder();
 
-        return todoListDto;
+        todoListDto.id( list.getId() );
+        todoListDto.name( list.getName() );
+        todoListDto.description( list.getDescription() );
+        todoListDto.createdAt( list.getCreatedAt() );
+        todoListDto.updatedAt( list.getUpdatedAt() );
+
+        return todoListDto.build();
     }
 }

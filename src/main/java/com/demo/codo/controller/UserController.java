@@ -2,7 +2,10 @@ package com.demo.codo.controller;
 
 import com.demo.codo.dto.UserRequest;
 import com.demo.codo.dto.UserResponse;
+import com.demo.codo.entity.User;
+import com.demo.codo.mapper.UserMapper;
 import com.demo.codo.service.UserService;
+import com.demo.codo.service.EmailVerificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -30,6 +33,8 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1/users")
 public class UserController {
     private final UserService service;
+    private final EmailVerificationService emailVerificationService;
+    private final UserMapper userMapper;
 
     @Operation(summary = "Create a new user", description = "Create a new user account with the provided details")
     @ApiResponses(value = {
@@ -45,11 +50,12 @@ public class UserController {
                             schema = @Schema(example = "{\"message\": \"User with this name already exists\"}")))                    
     })
     @PostMapping
-    public ResponseEntity<Void> create(
+    public ResponseEntity<UserResponse> create(
             @Parameter(description = "User details for creating a new account", required = true)
             @Valid @RequestBody UserRequest request) {
-        service.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        User createdUser = service.create(request);
+        UserResponse userResponse = userMapper.toResponse(createdUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
     }
 
     @Operation(summary = "Search user by email", description = "Find a user by their email address")
@@ -70,5 +76,28 @@ public class UserController {
         return service.findByEmail(email)
                 .map(user -> ResponseEntity.ok(user))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @Operation(summary = "Verify user email", description = "Verify user email address using verification token")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Email verified successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(example = "{\"message\": \"Email verified successfully\"}"))),
+            @ApiResponse(responseCode = "400", description = "Invalid or expired token",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(example = "{\"message\": \"Invalid or expired verification token\"}"))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required",
+                    content = @Content)
+    })
+    @GetMapping("/verify")
+    public ResponseEntity<String> verifyEmail(
+            @Parameter(description = "Verification token from email", required = true)
+            @RequestParam(value = "token") String token) {
+        boolean verified = emailVerificationService.verifyEmail(token);
+        if (verified) {
+            return ResponseEntity.ok("{\"message\": \"Email verified successfully\"}");
+        } else {
+            return ResponseEntity.badRequest().body("{\"message\": \"Invalid or expired verification token\"}");
+        }
     }
 }

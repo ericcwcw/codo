@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-07-23T10:53:58+0800",
+    date = "2025-07-25T08:01:27+0800",
     comments = "version: 1.5.5.Final, compiler: javac, environment: Java 17.0.15 (Eclipse Adoptium)"
 )
 @Component
@@ -20,9 +20,18 @@ public class TodoItemMapperImpl implements TodoItemMapper {
             return null;
         }
 
-        TodoItemResponse todoItemResponse = new TodoItemResponse();
+        TodoItemResponse.TodoItemResponseBuilder todoItemResponse = TodoItemResponse.builder();
 
-        return todoItemResponse;
+        todoItemResponse.id( dto.getId() );
+        todoItemResponse.listId( dto.getListId() );
+        todoItemResponse.name( dto.getName() );
+        todoItemResponse.description( dto.getDescription() );
+        todoItemResponse.dueDate( dto.getDueDate() );
+        todoItemResponse.status( dto.getStatus() );
+        todoItemResponse.createdAt( dto.getCreatedAt() );
+        todoItemResponse.updatedAt( dto.getUpdatedAt() );
+
+        return todoItemResponse.build();
     }
 
     @Override
@@ -31,8 +40,17 @@ public class TodoItemMapperImpl implements TodoItemMapper {
             return null;
         }
 
-        TodoItemDto todoItemDto = new TodoItemDto();
+        TodoItemDto.TodoItemDtoBuilder todoItemDto = TodoItemDto.builder();
 
-        return todoItemDto;
+        todoItemDto.id( entity.getId() );
+        todoItemDto.listId( entity.getListId() );
+        todoItemDto.name( entity.getName() );
+        todoItemDto.description( entity.getDescription() );
+        todoItemDto.dueDate( entity.getDueDate() );
+        todoItemDto.status( entity.getStatus() );
+        todoItemDto.createdAt( entity.getCreatedAt() );
+        todoItemDto.updatedAt( entity.getUpdatedAt() );
+
+        return todoItemDto.build();
     }
 }

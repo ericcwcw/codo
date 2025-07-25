@@ -1,5 +1,6 @@
 package com.demo.codo.entity;
 
+import com.demo.codo.enums.TodoItemStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,8 +41,9 @@ public class TodoItem {
     @Column(name = "due_date")
     private LocalDate dueDate;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50)
-    private String status;
+    private TodoItemStatus status;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -54,7 +56,4 @@ public class TodoItem {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "list_id", insertable = false, updatable = false)
     private TodoList todoList;
-
-    @OneToMany(mappedBy = "todoItem", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<TodoItemMedia> todoItemMedia;
 }

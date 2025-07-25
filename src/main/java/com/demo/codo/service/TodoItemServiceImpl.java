@@ -4,6 +4,7 @@ import com.demo.codo.dto.TodoItemDto;
 import com.demo.codo.dto.TodoItemRequest;
 import com.demo.codo.entity.TodoItem;
 import com.demo.codo.entity.TodoList;
+import com.demo.codo.enums.TodoItemStatus;
 import com.demo.codo.exception.NotFoundException;
 import com.demo.codo.mapper.TodoItemMapper;
 import com.demo.codo.repository.TodoItemRepository;
@@ -42,12 +43,12 @@ public class TodoItemServiceImpl implements TodoItemService {
     }
 
     @Override
-    public Page<TodoItemDto> getAll(UUID listId, String status, LocalDate dueDateFrom, LocalDate dueDateTo, Pageable pageable) {
+    public Page<TodoItemDto> getAll(UUID listId, TodoItemStatus status, LocalDate dueDateFrom, LocalDate dueDateTo, Pageable pageable) {
         getTodoList(listId);
         Specification<TodoItem> spec = (root, query, criteriaBuilder) -> 
             criteriaBuilder.equal(root.get("todoList").get("id"), listId);
             
-        if (status != null && !status.trim().isEmpty()) {
+        if (status != null) {
             spec = spec.and((root, query, criteriaBuilder) -> 
                 criteriaBuilder.equal(root.get("status"), status));
         }
@@ -105,6 +106,4 @@ public class TodoItemServiceImpl implements TodoItemService {
         return repository.findByIdAndTodoListId(id, listId)
                 .orElseThrow(() -> new NotFoundException("Todo item not found, id=" + id + ", listId=" + listId));
     }
-    
-
 }

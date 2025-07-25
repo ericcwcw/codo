@@ -1,8 +1,7 @@
 package com.demo.codo.controller;
 
-import com.demo.codo.TestContainerConfiguration;
+import com.demo.codo.TestContainerConfig;
 import com.demo.codo.dto.TodoListRequest;
-import com.demo.codo.dto.TodoListResponse;
 import com.demo.codo.dto.UserRequest;
 import com.demo.codo.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,12 +25,9 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Integration test for TodoListController with Spring Security.
- */
 @SpringBootTest
 @ActiveProfiles("test")
-@Import(TestContainerConfiguration.class)
+@Import(TestContainerConfig.class)
 @AutoConfigureWebMvc
 class TodoListControllerTest {
     private MockMvc mockMvc;
@@ -49,7 +45,7 @@ class TodoListControllerTest {
     private static final String TEST_PASSWORD = "testpass123";
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
@@ -64,7 +60,11 @@ class TodoListControllerTest {
                 .email(TEST_EMAIL)
                 .password(TEST_PASSWORD)
                 .build();
-        userService.create(newUserRequest);
+        try {
+            userService.create(newUserRequest);
+        } catch (com.demo.codo.exception.DuplicateUserException e) {
+            // User already exists, which is fine for test setup
+        }
     }
 
     @Test
