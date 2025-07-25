@@ -1,0 +1,760 @@
+{
+	"info": {
+		"_postman_id": "761a7721-358a-45e4-853e-06aa6d4ca1f5",
+		"name": "Codo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "47047539",
+		"_collection_link": "https://revue-frame-8o-8899559.postman.co/workspace/Codo~73eac414-b500-4327-9052-27f3915160f5/collection/47047539-761a7721-358a-45e4-853e-06aa6d4ca1f5?action=share&source=collection_link&creator=47047539"
+	},
+	"item": [
+		{
+			"name": "1. Create user (Mary)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const responseJson = pm.response.json()",
+							"pm.environment.set('maryId', responseJson['id'])"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"{{maryName}}\",\n    \"email\": \"{{maryEmail}}\",\n    \"password\": \"{{password}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/users",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2. Verify user account (Mary)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/api/v1/users/{{maryId}}/verify?token={{maryToken}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"users",
+						"{{maryId}}",
+						"verify"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "{{maryToken}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3. Create user (Peter)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const responseJson = pm.response.json()",
+							"pm.environment.set('peterId', responseJson['id'])"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"{{peterName}}\",\n    \"email\": \"{{peterEmail}}\",\n    \"password\": \"{{password}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/users",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "4. Verify user account (Peter)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/users/{{collaboratorId}}/verify?token={{collaboratorToken}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users",
+						"{{collaboratorId}}",
+						"verify"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "{{collaboratorToken}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "5. Create user (John)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const responseJson = pm.response.json()",
+							"pm.environment.set('johnId', responseJson['id'])"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"{{johnName}}\",\n    \"email\": \"{{johnEmail}}\",\n    \"password\": \"{{password}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/users",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6. Verify user account (John)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/users/{{johnId}}/verify?token={{johnToken}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users",
+						"{{johnId}}",
+						"verify"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "{{johnToken}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "7. Create todo list",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const responseJson = pm.response.json()",
+							"pm.environment.set('listId', responseJson['id'])"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{maryEmail}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Interview Prep\",\n    \"description\": \"Preparation for SleekFlow interview\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/api/v1/todo/lists",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"todo",
+						"lists"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "8. Update todo list",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{maryEmail}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Interview Prep\",\n    \"description\": \"Preparation for SleekFlow interview\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/api/v1/todo/lists/{{listId}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"todo",
+						"lists",
+						"{{listId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "9. Search user by email (Peter)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const responseJson = pm.response.json()",
+							"pm.environment.set('peterId', responseJson['id'])"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{maryEmail}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/api/v1/users/search?email={{peterEmail}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"users",
+						"search"
+					],
+					"query": [
+						{
+							"key": "email",
+							"value": "{{peterEmail}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "10. Search user by email (John)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const responseJson = pm.response.json()",
+							"pm.environment.set('johnId', responseJson['id'])"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": ""
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "11. Add collaborator (Peter) (editor)",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{maryEmail}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"userId\": {{peterId}},\n    \"canEdit\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/api/v1/todo/lists/{{listId}}/collaborators",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"todo",
+						"lists",
+						"{{listId}}",
+						"collaborators"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "12. Create todo item",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const responseJson = pm.response.json()",
+							"pm.environment.set('itemId', responseJson['id'])"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{peterEmail}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/api/v1/todo/lists/{{listId}}/items",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"todo",
+						"lists",
+						"{{listId}}",
+						"items"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "13. Add collaborator (John) (editor)",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{maryEmail}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"userId\": {{johnId}},\n    \"canEdit\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/api/v1/todo/lists/{{listId}}/collaborators",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"todo",
+						"lists",
+						"{{listId}}",
+						"collaborators"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "14. Update collaborator permission (John) (readonly)",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{maryEmail}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"canEdit\": false\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/api/v1/todo/lists/{{listId}}/collaborators/{{johnId}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"todo",
+						"lists",
+						"{{listId}}",
+						"collaborators",
+						"{{johnId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "15. Get todo item",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{johnEmail}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/api/v1/todo/lists/{{listId}}/items/{{itemId}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"todo",
+						"lists",
+						"{{listId}}",
+						"items",
+						"{{itemId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "16. Get todo list",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{johnEmail}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/api/v1/todo/lists/{{listId}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"todo",
+						"lists",
+						"{{listId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "17. Update todo item",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{peterEmail}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/api/v1/todo/lists/{{listId}}/items/{{itemId}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"todo",
+						"lists",
+						"{{listId}}",
+						"items",
+						"{{itemId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "18. Delete todo item",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{maryEmail}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/api/v1/todo/lists/{{listId}}/items/{{itemId}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"todo",
+						"lists",
+						"{{listId}}",
+						"items",
+						"{{itemId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "19. Delete todo list",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{maryEmail}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/api/v1/todo/lists/{{listId}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"todo",
+						"lists",
+						"{{listId}}"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
