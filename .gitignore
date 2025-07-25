@@ -3,6 +3,12 @@ HELP.md
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
+**/src/main/**/generated/
+**/src/test/**/generated/
+**/generated/
+**/target/generated-sources/
+**/target/generated-test-sources/
+**/build/generated/
 !**/src/test/**/build/
 
 ### STS ###
