@@ -44,7 +44,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/actuator/**").permitAll() // Allow health checks
+                .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/api/v1/users/verify", "/api/v1/users").permitAll() // Allow email verification
                 .anyRequest().authenticated()
             )
             .httpBasic(httpBasic -> {});
