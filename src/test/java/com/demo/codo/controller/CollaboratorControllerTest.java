@@ -1,8 +1,7 @@
 package com.demo.codo.controller;
 
-import com.demo.codo.TestContainerConfiguration;
+import com.demo.codo.TestContainerConfig;
 import com.demo.codo.dto.CollaboratorRequest;
-import com.demo.codo.dto.TodoListRequest;
 import com.demo.codo.dto.UserRequest;
 import com.demo.codo.entity.TodoList;
 import com.demo.codo.entity.User;
@@ -11,10 +10,8 @@ import com.demo.codo.repository.TodoListRepository;
 import com.demo.codo.repository.UserRepository;
 import com.demo.codo.repository.UserTodoListRepository;
 import com.demo.codo.service.UserService;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,21 +21,23 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.util.UUID;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestContainerConfiguration.class)
-@Transactional
+@Import(TestContainerConfig.class)
 public class CollaboratorControllerTest {
 
     private MockMvc mockMvc;
@@ -70,7 +69,7 @@ public class CollaboratorControllerTest {
     private TodoList testTodoList;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         
@@ -79,21 +78,22 @@ public class CollaboratorControllerTest {
                 .apply(springSecurity())
                 .build();
 
-        // Clean up
         userTodoListRepository.deleteAll();
         todoListRepository.deleteAll();
         userRepository.deleteAll();
 
-        // Create test user using UserService (for proper authentication)
         UserRequest newUserRequest = UserRequest.builder()
                 .name(TEST_NAME)
                 .email(TEST_EMAIL)
                 .password(TEST_PASSWORD)
                 .build();
-        userService.create(newUserRequest);
+        try {
+            userService.create(newUserRequest);
+        } catch (com.demo.codo.exception.DuplicateUserException e) {
+            // User already exists, which is fine for test setup
+        }
         testUser = userRepository.findByEmail(TEST_EMAIL).orElseThrow();
 
-        // Create collaborator user
         collaboratorUser = User.builder()
                 .name("Collaborator User")
                 .email("collaborator@example.com")
@@ -101,14 +101,12 @@ public class CollaboratorControllerTest {
                 .build();
         collaboratorUser = userRepository.save(collaboratorUser);
 
-        // Create test todo list
         testTodoList = TodoList.builder()
                 .name("Test Todo List")
                 .description("Test Description")
                 .build();
         testTodoList = todoListRepository.save(testTodoList);
 
-        // Make test user the owner
         UserTodoList ownerRelation = UserTodoList.builder()
                 .userId(testUser.getId())
                 .listId(testTodoList.getId())
@@ -123,7 +121,7 @@ public class CollaboratorControllerTest {
         mockMvc.perform(get("/api/v1/todo/lists/{listId}/collaborators", testTodoList.getId())
                         .with(httpBasic(TEST_EMAIL, TEST_PASSWORD)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0))); // Empty - owners are excluded from collaborators list
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
@@ -164,7 +162,6 @@ public class CollaboratorControllerTest {
 
     @Test
     void shouldFailToAddDuplicateCollaborator() throws Exception {
-        // First, add the collaborator
         CollaboratorRequest request = CollaboratorRequest.builder()
                 .userId(collaboratorUser.getId())
                 .canEdit(true)
@@ -176,7 +173,6 @@ public class CollaboratorControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
 
-        // Try to add the same collaborator again
         mockMvc.perform(post("/api/v1/todo/lists/{listId}/collaborators", testTodoList.getId())
                         .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -186,7 +182,6 @@ public class CollaboratorControllerTest {
 
     @Test
     void shouldUpdateCollaboratorPermissions() throws Exception {
-        // First, add a collaborator
         UserTodoList collaboration = UserTodoList.builder()
                 .userId(collaboratorUser.getId())
                 .listId(testTodoList.getId())
@@ -195,7 +190,6 @@ public class CollaboratorControllerTest {
                 .build();
         userTodoListRepository.save(collaboration);
 
-        // Update permissions
         CollaboratorRequest request = CollaboratorRequest.builder()
                 .canEdit(true)
                 .build();
@@ -212,7 +206,6 @@ public class CollaboratorControllerTest {
 
     @Test
     void shouldRemoveCollaborator() throws Exception {
-        // First, add a collaborator
         UserTodoList collaboration = UserTodoList.builder()
                 .userId(collaboratorUser.getId())
                 .listId(testTodoList.getId())
@@ -221,24 +214,22 @@ public class CollaboratorControllerTest {
                 .build();
         userTodoListRepository.save(collaboration);
 
-        // Remove the collaborator
         mockMvc.perform(delete("/api/v1/todo/lists/{listId}/collaborators/{userId}", 
                         testTodoList.getId(), collaboratorUser.getId())
                         .with(httpBasic(TEST_EMAIL, TEST_PASSWORD)))
                 .andExpect(status().isNoContent());
 
-        // Verify collaborator is removed
         mockMvc.perform(get("/api/v1/todo/lists/{listId}/collaborators", testTodoList.getId())
                         .with(httpBasic(TEST_EMAIL, TEST_PASSWORD)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0))); // Empty - owners are excluded from collaborators list
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
 
     @Test
     void shouldFailToAddCollaboratorWithInvalidEmail() throws Exception {
         CollaboratorRequest request = CollaboratorRequest.builder()
-                .userId(UUID.randomUUID()) // Non-existent user ID
+                .userId(UUID.randomUUID())
                 .canEdit(true)
                 .build();
 

@@ -1,21 +1,23 @@
 package com.demo.codo.controller;
 
-import com.demo.codo.TestContainerConfiguration;
+import com.demo.codo.TestContainerConfig;
 import com.demo.codo.dto.TodoItemDto;
 import com.demo.codo.dto.TodoItemRequest;
-import com.demo.codo.dto.UserRequest;
-import com.demo.codo.service.UserService;
-import com.demo.codo.service.TodoListService;
-import com.demo.codo.dto.TodoListRequest;
 import com.demo.codo.dto.TodoListDto;
+import com.demo.codo.dto.TodoListRequest;
+import com.demo.codo.dto.UserRequest;
+import com.demo.codo.entity.TodoList;
 import com.demo.codo.entity.User;
 import com.demo.codo.entity.UserTodoList;
+import com.demo.codo.enums.TodoItemStatus;
+import com.demo.codo.repository.TodoListRepository;
 import com.demo.codo.repository.UserRepository;
 import com.demo.codo.repository.UserTodoListRepository;
+import com.demo.codo.service.TodoListService;
+import com.demo.codo.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
@@ -38,12 +40,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
-/**
- * Integration test for TodoItemController with Spring Security.
- */
 @SpringBootTest
 @ActiveProfiles("test")
-@Import(TestContainerConfiguration.class)
+@Import(TestContainerConfig.class)
 @AutoConfigureWebMvc
 class TodoItemControllerTest {
 
@@ -73,7 +72,7 @@ class TodoItemControllerTest {
     private static final String TEST_PASSWORD = "testpass123";
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
@@ -88,20 +87,19 @@ class TodoItemControllerTest {
                 .email(TEST_EMAIL)
                 .password(TEST_PASSWORD)
                 .build();
-        userService.create(newUserRequest);
-        
-        // Create a real TodoList in the database
+        try {
+            userService.create(newUserRequest);
+        } catch (com.demo.codo.exception.DuplicateUserException e) {
+            // User already exists, which is fine for test setup
+        }
+
         TodoListRequest listRequest = TodoListRequest.builder()
                 .name("Test List")
                 .description("Test list for integration tests")
                 .build();
-        System.out.println("Creating TodoList with request: " + listRequest);
         TodoListDto createdList = todoListService.create(listRequest);
-        System.out.println("Created TodoList: " + createdList);
         testListId = createdList.getId();
-        System.out.println("testListId set to: " + testListId);
-        
-        // Manually create owner record for test user (since no authentication context in tests)
+
         User testUser = userRepository.findByEmail(TEST_EMAIL)
                 .orElseThrow(() -> new RuntimeException("Test user not found"));
         
@@ -113,17 +111,12 @@ class TodoItemControllerTest {
                 .build();
         
         userTodoListRepository.save(ownerRecord);
-        System.out.println("Created owner record for test user");
     }
-    
-    /**
-     * Helper method to create a TodoList with proper owner record for tests
-     */
+
     private TodoListDto createTodoListWithOwner(String name, String description) {
         TodoListRequest request = new TodoListRequest(name, description);
         TodoListDto createdList = todoListService.create(request);
         
-        // Create owner record for test user
         User testUser = userRepository.findByEmail(TEST_EMAIL)
                 .orElseThrow(() -> new RuntimeException("Test user not found"));
         
@@ -144,26 +137,24 @@ class TodoItemControllerTest {
             "Complete project", 
             "Finish the Spring Boot project", 
             LocalDate.now().plusDays(7), 
-            "PENDING", 
-            null  // listId should not be in request body since it's in URL path
+            TodoItemStatus.TODO, 
+            null
         );
 
         mockMvc.perform(post("/api/v1/todo/lists/{listId}/items", testListId)
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andDo(print()) // This will print the full request/response details
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Complete project"))
                 .andExpect(jsonPath("$.description").value("Finish the Spring Boot project"))
-                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.status").value("TODO"))
                 .andExpect(jsonPath("$.id").exists());
     }
 
     @Test
     void shouldGetTodoItemById() throws Exception {
-        // Create a todo item first
-        TodoItemRequest request = new TodoItemRequest("Test task", "Description", LocalDate.now(), "PENDING", null);
+        TodoItemRequest request = new TodoItemRequest("Test task", "Description", LocalDate.now(), TodoItemStatus.TODO, null);
         MvcResult createResult = mockMvc.perform(post("/api/v1/todo/lists/{listId}/items", testListId)
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -176,19 +167,17 @@ class TodoItemControllerTest {
                 TodoItemDto.class
         );
 
-        // Get the todo item
         mockMvc.perform(get("/api/v1/todo/lists/{listId}/items/{id}", testListId, created.getId())
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Test task"))
                 .andExpect(jsonPath("$.description").value("Description"))
-                .andExpect(jsonPath("$.status").value("PENDING"));
+                .andExpect(jsonPath("$.status").value("TODO"));
     }
 
     @Test
     void shouldUpdateTodoItemSuccessfully() throws Exception {
-        // Create a todo item first
-        TodoItemRequest createRequest = new TodoItemRequest("Original task", "Original text", LocalDate.now(), "PENDING", null);
+        TodoItemRequest createRequest = new TodoItemRequest("Original task", "Original text", LocalDate.now(), TodoItemStatus.TODO, null);
         MvcResult createResult = mockMvc.perform(post("/api/v1/todo/lists/{listId}/items", testListId)
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -198,8 +187,7 @@ class TodoItemControllerTest {
 
         TodoItemDto created = objectMapper.readValue(createResult.getResponse().getContentAsString(), TodoItemDto.class);
 
-        // Update the todo item
-        TodoItemRequest updateRequest = new TodoItemRequest("Updated task", "Updated text", LocalDate.now().plusDays(1), "COMPLETED", null);
+        TodoItemRequest updateRequest = new TodoItemRequest("Updated task", "Updated text", LocalDate.now().plusDays(1), TodoItemStatus.COMPLETED, null);
         mockMvc.perform(put("/api/v1/todo/lists/{listId}/items/{id}", testListId, created.getId())
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -212,8 +200,7 @@ class TodoItemControllerTest {
 
     @Test
     void shouldDeleteTodoItemSuccessfully() throws Exception {
-        // Create a todo item first
-        TodoItemRequest request = new TodoItemRequest("Task to delete", "Description", LocalDate.now(), "PENDING", null);
+        TodoItemRequest request = new TodoItemRequest("Task to delete", "Description", LocalDate.now(), TodoItemStatus.TODO, null);
         MvcResult createResult = mockMvc.perform(post("/api/v1/todo/lists/{listId}/items", testListId)
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -223,12 +210,10 @@ class TodoItemControllerTest {
 
         TodoItemDto created = objectMapper.readValue(createResult.getResponse().getContentAsString(), TodoItemDto.class);
 
-        // Delete the todo item
         mockMvc.perform(delete("/api/v1/todo/lists/{listId}/items/{id}", testListId, created.getId())
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD)))
                 .andExpect(status().isNoContent());
 
-        // Verify it's deleted
         mockMvc.perform(get("/api/v1/todo/lists/{listId}/items/{id}", testListId, created.getId())
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD)))
                 .andExpect(status().isNotFound());
@@ -236,56 +221,51 @@ class TodoItemControllerTest {
 
     @Test
     void shouldFilterTodoItemsByStatus() throws Exception {
-        // Create todo items with different statuses
         mockMvc.perform(post("/api/v1/todo/lists/{listId}/items", testListId)
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(new TodoItemRequest("Task 1", "Description 1", LocalDate.now(), "PENDING", null))));
+                .content(objectMapper.writeValueAsString(new TodoItemRequest("Task 1", "Description 1", LocalDate.now(), TodoItemStatus.TODO, null))));
         
         mockMvc.perform(post("/api/v1/todo/lists/{listId}/items", testListId)
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(new TodoItemRequest("Task 2", "Description 2", LocalDate.now(), "COMPLETED", null))));
+                .content(objectMapper.writeValueAsString(new TodoItemRequest("Task 2", "Description 2", LocalDate.now(), TodoItemStatus.COMPLETED, null))));
         
         mockMvc.perform(post("/api/v1/todo/lists/{listId}/items", testListId)
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(new TodoItemRequest("Task 3", "Description 3", LocalDate.now(), "PENDING", null))));
+                .content(objectMapper.writeValueAsString(new TodoItemRequest("Task 3", "Description 3", LocalDate.now(), TodoItemStatus.TODO, null))));
 
-        // Filter by PENDING status
         mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testListId)
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
-                .param("status", "PENDING"))
+                .param("status", "TODO"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(2)));
     }
 
     @Test
     void shouldFilterTodoItemsByListId() throws Exception {
-        // Create two TodoLists first with proper owner records
         TodoListDto list1 = createTodoListWithOwner("Test List 1", "First test list");
         TodoListDto list2 = createTodoListWithOwner("Test List 2", "Second test list");
         
         UUID listId1 = list1.getId();
         UUID listId2 = list2.getId();
 
-        // Create items for different lists
         mockMvc.perform(post("/api/v1/todo/lists/{listId}/items", listId1)
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(new TodoItemRequest("Task 1", "Description 1", LocalDate.now(), "PENDING", null))));
+                .content(objectMapper.writeValueAsString(new TodoItemRequest("Task 1", "Description 1", LocalDate.now(), TodoItemStatus.TODO, null))));
         
         mockMvc.perform(post("/api/v1/todo/lists/{listId}/items", listId2)
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(new TodoItemRequest("Task 2", "Description 2", LocalDate.now(), "PENDING", null))));
+                .content(objectMapper.writeValueAsString(new TodoItemRequest("Task 2", "Description 2", LocalDate.now(), TodoItemStatus.TODO, null))));
         
         mockMvc.perform(post("/api/v1/todo/lists/{listId}/items", listId1)
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(new TodoItemRequest("Task 3", "Description 3", LocalDate.now(), "PENDING", null))));
+                .content(objectMapper.writeValueAsString(new TodoItemRequest("Task 3", "Description 3", LocalDate.now(), TodoItemStatus.TODO, null))));
 
-        // Get items for listId1
         mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", listId1)
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD)))
                 .andExpect(status().isOk())
@@ -294,15 +274,13 @@ class TodoItemControllerTest {
 
     @Test
     void shouldHandlePagination() throws Exception {
-        // Create multiple todo items
         for (int i = 1; i <= 5; i++) {
             mockMvc.perform(post("/api/v1/todo/lists/{listId}/items", testListId)
                     .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(new TodoItemRequest("Task " + i, "Description " + i, LocalDate.now(), "PENDING", null))));
+                    .content(objectMapper.writeValueAsString(new TodoItemRequest("Task " + i, "Description " + i, LocalDate.now(), TodoItemStatus.TODO, null))));
         }
 
-        // Get paginated results
         mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testListId)
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
                 .param("page", "0")
@@ -322,7 +300,7 @@ class TodoItemControllerTest {
 
     @Test
     void shouldFailToCreateTodoItemWithBlankName() throws Exception {
-        TodoItemRequest request = new TodoItemRequest("", "Description", LocalDate.now(), "PENDING", null);
+        TodoItemRequest request = new TodoItemRequest("", "Description", LocalDate.now(), TodoItemStatus.TODO, null);
         
         mockMvc.perform(post("/api/v1/todo/lists/{listId}/items", testListId)
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
@@ -333,8 +311,8 @@ class TodoItemControllerTest {
 
     @Test
     void shouldFailToCreateTodoItemWithLongName() throws Exception {
-        String longName = "a".repeat(256); // Assuming max length is 255
-        TodoItemRequest request = new TodoItemRequest(longName, "Description", LocalDate.now(), "PENDING", null);
+        String longName = "a".repeat(256);
+        TodoItemRequest request = new TodoItemRequest(longName, "Description", LocalDate.now(), TodoItemStatus.TODO, null);
         
         mockMvc.perform(post("/api/v1/todo/lists/{listId}/items", testListId)
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
@@ -354,7 +332,7 @@ class TodoItemControllerTest {
 
     @Test
     void shouldHandleSpecialCharactersInSearch() throws Exception {
-        TodoItemRequest request = new TodoItemRequest("Special chars: @#$%^&*()", "Description with émojis 🎉", LocalDate.now(), "PENDING", null);
+        TodoItemRequest request = new TodoItemRequest("Special chars: @#$%^&*()", "Description with émojis 🎉", LocalDate.now(), TodoItemStatus.TODO, null);
         
         mockMvc.perform(post("/api/v1/todo/lists/{listId}/items", testListId)
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
@@ -369,7 +347,7 @@ class TodoItemControllerTest {
 
     @Test
     void shouldHandleUnicodeCharacters() throws Exception {
-        TodoItemRequest request = new TodoItemRequest("Unicode: 你好世界", "Description: こんにちは", LocalDate.now(), "PENDING", null);
+        TodoItemRequest request = new TodoItemRequest("Unicode: 你好世界", "Description: こんにちは", LocalDate.now(), TodoItemStatus.TODO, null);
         
         mockMvc.perform(post("/api/v1/todo/lists/{listId}/items", testListId)
                 .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))

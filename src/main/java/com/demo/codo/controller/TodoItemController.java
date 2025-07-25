@@ -4,6 +4,7 @@ import com.demo.codo.annotation.RequireAccess;
 import com.demo.codo.dto.TodoItemDto;
 import com.demo.codo.dto.TodoItemRequest;
 import com.demo.codo.dto.TodoItemResponse;
+import com.demo.codo.enums.TodoItemStatus;
 import com.demo.codo.mapper.TodoItemMapper;
 import com.demo.codo.service.TodoItemService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,7 +56,7 @@ public class TodoItemController {
                     content = @Content)
     })
     @PostMapping
-    @RequireAccess(value = RequireAccess.AccessType.EDIT, resourceIdParam = "listId")
+    @RequireAccess(value = RequireAccess.AccessType.EDIT)
     public ResponseEntity<TodoItemResponse> create(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID listId,
@@ -66,7 +67,7 @@ public class TodoItemController {
         return ResponseEntity.status(HttpStatus.CREATED).body(itemResponse);
     }
 
-    @Operation(summary = "Get todo items", description = "Retrieve todo items from a specific list with optional filtering by status and due date range")
+    @Operation(summary = "Get todo items", description = "Retrieve todo items from a specific list with optional filtering by status and due date range. Supports sorting by status, name, dueDate, createdAt, updatedAt (use ?sort=field,direction e.g. ?sort=status,asc&sort=name,desc)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved todo items",
                     content = @Content(mediaType = "application/json",
@@ -81,13 +82,13 @@ public class TodoItemController {
     public ResponseEntity<Page<TodoItemResponse>> getAll(
             @Parameter(description = "Todo list unique identifier", required = true)
             @PathVariable UUID listId,
-            @Parameter(description = "Filter by item status (PENDING, IN_PROGRESS, COMPLETED)")
-            @RequestParam(required = false) String status,
+            @Parameter(description = "Filter by item status (TODO, IN_PROGRESS, COMPLETED, CANCELLED)")
+            @RequestParam(required = false) TodoItemStatus status,
             @Parameter(description = "Filter items with due date from this date (inclusive)")
             @RequestParam(required = false) LocalDate dueDateFrom,
             @Parameter(description = "Filter items with due date to this date (inclusive)")
             @RequestParam(required = false) LocalDate dueDateTo,
-            @Parameter(description = "Pagination information")
+            @Parameter(description = "Pagination and sorting information. Sortable fields: status, name, dueDate, createdAt, updatedAt. Example: ?sort=status,asc&sort=name,desc&page=0&size=10")
             Pageable pageable) {
         Page<TodoItemDto> itemDtos = service.getAll(listId, status, dueDateFrom, dueDateTo, pageable);
         Page<TodoItemResponse> itemResponses = itemDtos.map(mapper::toResponse);

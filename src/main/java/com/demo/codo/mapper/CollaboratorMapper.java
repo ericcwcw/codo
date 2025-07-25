@@ -8,14 +8,6 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface CollaboratorMapper {
-
-    /**
-     * Map UserTodoList entity and User entity to CollaboratorDto
-     * 
-     * @param userTodoList the UserTodoList entity containing collaboration info
-     * @param user the User entity containing user details
-     * @return CollaboratorDto with combined information
-     */
     @Mapping(source = "userTodoList.userId", target = "userId")
     @Mapping(source = "user.name", target = "userName")
     @Mapping(source = "user.email", target = "userEmail")

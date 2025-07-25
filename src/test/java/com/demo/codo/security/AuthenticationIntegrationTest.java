@@ -1,6 +1,6 @@
 package com.demo.codo.security;
 
-import com.demo.codo.TestContainerConfiguration;
+import com.demo.codo.TestContainerConfig;
 import com.demo.codo.dto.UserRequest;
 import com.demo.codo.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Import(TestContainerConfiguration.class)
+@Import(TestContainerConfig.class)
 @AutoConfigureWebMvc
 class AuthenticationIntegrationTest {
 
@@ -49,7 +49,11 @@ class AuthenticationIntegrationTest {
                 .email(TEST_EMAIL)
                 .password(TEST_PASSWORD)
                 .build();
-        userService.create(newUserRequest);
+        try {
+            userService.create(newUserRequest);
+        } catch (com.demo.codo.exception.DuplicateUserException e) {
+            // User already exists, which is fine for test setup
+        }
     }
 
     @Test
@@ -81,7 +85,6 @@ class AuthenticationIntegrationTest {
 
     @Test
     void shouldProtectAllTodoEndpoints() throws Exception {
-        // Test various endpoints are protected
         mockMvc.perform(get("/api/v1/todo/lists"))
                 .andExpect(status().isUnauthorized());
 

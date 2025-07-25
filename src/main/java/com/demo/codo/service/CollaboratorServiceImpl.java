@@ -1,4 +1,4 @@
-package com.demo.codo.service.impl;
+package com.demo.codo.service;
 
 import com.demo.codo.dto.CollaboratorDto;
 import com.demo.codo.dto.CollaboratorRequest;
@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class CollaboratorServiceImpl implements CollaboratorService {
 
     private final UserTodoListRepository userTodoListRepository;
@@ -26,18 +25,14 @@ public class CollaboratorServiceImpl implements CollaboratorService {
     private final CollaboratorMapper collaboratorMapper;
 
     @Override
-    @Transactional(readOnly = true)
     public List<CollaboratorDto> getCollaborators(UUID listId) {
-        // Only get collaborators (exclude owners)
         List<UserTodoList> userTodoLists = userTodoListRepository.findByListIdAndIsOwnerFalse(listId);
         
         return userTodoLists.stream()
-                .map(utl -> {
-                    // Fetch user for each collaboration
-                    User user = userRepository.findById(utl.getUserId())
-                            .orElseThrow(() -> new RuntimeException("User not found with id: " + utl.getUserId()));
-                    
-                    return collaboratorMapper.toDto(utl, user);
+                .map(userTodoList -> {
+                    User user = userRepository.findById(userTodoList.getUserId())
+                            .orElseThrow(() -> new RuntimeException("User not found with id: " + userTodoList.getUserId()));
+                    return collaboratorMapper.toDto(userTodoList, user);
                 })
                 .collect(Collectors.toList());
     }
@@ -46,16 +41,13 @@ public class CollaboratorServiceImpl implements CollaboratorService {
     public CollaboratorDto addCollaborator(UUID listId, CollaboratorRequest request) {
         UUID userId = request.getUserId();
         
-        // Validate that userId is provided for add operations
         if (userId == null) {
             throw new IllegalArgumentException("User ID is required for adding collaborators");
         }
         
-        // Fetch the user to validate existence and set the relationship
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
         
-        // Check if collaboration already exists
         if (userTodoListRepository.existsByUserIdAndListId(userId, listId)) {
             throw new IllegalArgumentException("User is already a collaborator on this todo list");
         }
@@ -68,7 +60,6 @@ public class CollaboratorServiceImpl implements CollaboratorService {
         
         UserTodoList saved = userTodoListRepository.save(userTodoList);
         
-        // Create DTO using mapper with the user we already fetched
         return collaboratorMapper.toDto(saved, user);
     }
 
@@ -77,12 +68,9 @@ public class CollaboratorServiceImpl implements CollaboratorService {
         UserTodoList userTodoList = userTodoListRepository.findByUserIdAndListId(userId, listId)
                 .orElseThrow(() -> new IllegalArgumentException("Collaboration not found"));
         
-        // Don't allow changing owner status through this method
         userTodoList.setIsEditable(request.getCanEdit());
-        
         UserTodoList saved = userTodoListRepository.save(userTodoList);
         
-        // Fetch user for response
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
         
@@ -90,6 +78,7 @@ public class CollaboratorServiceImpl implements CollaboratorService {
     }
 
     @Override
+
     public void removeCollaborator(UUID listId, UUID userId) {
         if (!userTodoListRepository.existsByUserIdAndListId(userId, listId)) {
             throw new IllegalArgumentException("Collaboration not found");
