@@ -1,10 +1,10 @@
 {
 	"info": {
-		"_postman_id": "761a7721-358a-45e4-853e-06aa6d4ca1f5",
+		"_postman_id": "46178d48-2582-4b9c-a60b-52194161f03d",
 		"name": "Codo",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "47047539",
-		"_collection_link": "https://revue-frame-8o-8899559.postman.co/workspace/Codo~73eac414-b500-4327-9052-27f3915160f5/collection/47047539-761a7721-358a-45e4-853e-06aa6d4ca1f5?action=share&source=collection_link&creator=47047539"
+		"_collection_link": "https://revue-frame-8o-8899559.postman.co/workspace/Eric-Chung's-Workspace~18a72aec-a98e-46f0-89a8-2c88a7e8e1b0/collection/47047539-46178d48-2582-4b9c-a60b-52194161f03d?action=share&source=collection_link&creator=47047539"
 	},
 	"item": [
 		{
@@ -182,13 +182,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{host}}/users/{{johnId}}/verify?token={{johnToken}}",
+					"raw": "{{host}}/users/verify?token={{johnToken}}",
 					"host": [
 						"{{host}}"
 					],
 					"path": [
 						"users",
-						"{{johnId}}",
 						"verify"
 					],
 					"query": [
@@ -244,13 +243,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{host}}/api/v1/todo/lists",
+					"raw": "{{host}}/todo/lists",
 					"host": [
 						"{{host}}"
 					],
 					"path": [
-						"api",
-						"v1",
 						"todo",
 						"lists"
 					]
@@ -280,7 +277,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"name\": \"Interview Prep\",\n    \"description\": \"Preparation for SleekFlow interview\"\n}",
+					"raw": "{\n    \"name\": \"Interview Prep\",\n    \"description\": \"It is an important interview\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -288,13 +285,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{host}}/api/v1/todo/lists/{{listId}}",
+					"raw": "{{host}}/todo/lists/{{listId}}",
 					"host": [
 						"{{host}}"
 					],
 					"path": [
-						"api",
-						"v1",
 						"todo",
 						"lists",
 						"{{listId}}"
@@ -337,13 +332,11 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{host}}/api/v1/users/search?email={{peterEmail}}",
+					"raw": "{{host}}/users/search?email={{peterEmail}}",
 					"host": [
 						"{{host}}"
 					],
 					"path": [
-						"api",
-						"v1",
 						"users",
 						"search"
 					],
@@ -376,7 +369,20 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": ""
+					"raw": "{{host}}/users/search?email={{johnEmail}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users",
+						"search"
+					],
+					"query": [
+						{
+							"key": "email",
+							"value": "{{johnEmail}}"
+						}
+					]
 				}
 			},
 			"response": []
@@ -403,7 +409,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"userId\": {{peterId}},\n    \"canEdit\": true\n}",
+					"raw": "{\n    \"userId\": \"{{peterId}}\",\n    \"canEdit\": true\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -411,13 +417,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{host}}/api/v1/todo/lists/{{listId}}/collaborators",
+					"raw": "{{host}}/todo/lists/{{listId}}/collaborators",
 					"host": [
 						"{{host}}"
 					],
 					"path": [
-						"api",
-						"v1",
 						"todo",
 						"lists",
 						"{{listId}}",
@@ -460,14 +464,21 @@
 				},
 				"method": "POST",
 				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Studies\",\n    \"description\": \"Study take home assignment\",\n    \"dueDate\": \"2025-07-30\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
-					"raw": "{{host}}/api/v1/todo/lists/{{listId}}/items",
+					"raw": "{{host}}/todo/lists/{{listId}}/items",
 					"host": [
 						"{{host}}"
 					],
 					"path": [
-						"api",
-						"v1",
 						"todo",
 						"lists",
 						"{{listId}}",
@@ -499,7 +510,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"userId\": {{johnId}},\n    \"canEdit\": true\n}",
+					"raw": "{\n    \"userId\": \"{{peterId}}\",\n    \"canEdit\": false\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -507,13 +518,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{host}}/api/v1/todo/lists/{{listId}}/collaborators",
+					"raw": "{{host}}/todo/lists/{{listId}}/collaborators",
 					"host": [
 						"{{host}}"
 					],
 					"path": [
-						"api",
-						"v1",
 						"todo",
 						"lists",
 						"{{listId}}",
@@ -553,13 +562,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{host}}/api/v1/todo/lists/{{listId}}/collaborators/{{johnId}}",
+					"raw": "{{host}}/todo/lists/{{listId}}/collaborators/{{johnId}}",
 					"host": [
 						"{{host}}"
 					],
 					"path": [
-						"api",
-						"v1",
 						"todo",
 						"lists",
 						"{{listId}}",
@@ -591,13 +598,11 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{host}}/api/v1/todo/lists/{{listId}}/items/{{itemId}}",
+					"raw": "{{host}}/todo/lists/{{listId}}/items/{{itemId}}",
 					"host": [
 						"{{host}}"
 					],
 					"path": [
-						"api",
-						"v1",
 						"todo",
 						"lists",
 						"{{listId}}",
@@ -609,7 +614,7 @@
 			"response": []
 		},
 		{
-			"name": "16. Get todo list",
+			"name": "16. Get all todo items",
 			"request": {
 				"auth": {
 					"type": "basic",
@@ -629,13 +634,99 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{host}}/api/v1/todo/lists/{{listId}}",
+					"raw": "{{host}}/todo/lists/{{listId}}/items",
 					"host": [
 						"{{host}}"
 					],
 					"path": [
-						"api",
-						"v1",
+						"todo",
+						"lists",
+						"{{listId}}",
+						"items"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "17. Get all todo items (Filter & Sort)",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{johnEmail}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/todo/lists/{{listId}}/items?dueDateTo=2025-07-30&sort=status,desc&page=0&size=2",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"todo",
+						"lists",
+						"{{listId}}",
+						"items"
+					],
+					"query": [
+						{
+							"key": "dueDateTo",
+							"value": "2025-07-30"
+						},
+						{
+							"key": "sort",
+							"value": "status,desc"
+						},
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "size",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "18. Get todo list",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{johnEmail}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/todo/lists/{{listId}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
 						"todo",
 						"lists",
 						"{{listId}}"
@@ -645,7 +736,7 @@
 			"response": []
 		},
 		{
-			"name": "17. Update todo item",
+			"name": "19. Update todo item",
 			"request": {
 				"auth": {
 					"type": "basic",
@@ -662,16 +753,23 @@
 						}
 					]
 				},
-				"method": "DELETE",
+				"method": "PATCH",
 				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"status\": \"COMPLETED\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
-					"raw": "{{host}}/api/v1/todo/lists/{{listId}}/items/{{itemId}}",
+					"raw": "{{host}}/todo/lists/{{listId}}/items/{{itemId}}",
 					"host": [
 						"{{host}}"
 					],
 					"path": [
-						"api",
-						"v1",
 						"todo",
 						"lists",
 						"{{listId}}",
@@ -683,7 +781,7 @@
 			"response": []
 		},
 		{
-			"name": "18. Delete todo item",
+			"name": "20. Delete todo item",
 			"request": {
 				"auth": {
 					"type": "basic",
@@ -703,13 +801,11 @@
 				"method": "DELETE",
 				"header": [],
 				"url": {
-					"raw": "{{host}}/api/v1/todo/lists/{{listId}}/items/{{itemId}}",
+					"raw": "{{host}}/todo/lists/{{listId}}/items/{{itemId}}",
 					"host": [
 						"{{host}}"
 					],
 					"path": [
-						"api",
-						"v1",
 						"todo",
 						"lists",
 						"{{listId}}",
@@ -721,7 +817,7 @@
 			"response": []
 		},
 		{
-			"name": "19. Delete todo list",
+			"name": "21. Delete todo list",
 			"request": {
 				"auth": {
 					"type": "basic",
@@ -741,13 +837,11 @@
 				"method": "DELETE",
 				"header": [],
 				"url": {
-					"raw": "{{host}}/api/v1/todo/lists/{{listId}}",
+					"raw": "{{host}}/todo/lists/{{listId}}",
 					"host": [
 						"{{host}}"
 					],
 					"path": [
-						"api",
-						"v1",
 						"todo",
 						"lists",
 						"{{listId}}"
