@@ -124,7 +124,7 @@ public class TodoItemController {
             @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required",
                     content = @Content)
     })
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     @RequireListPermission(RequireListPermission.Permission.EDIT)
     public ResponseEntity<TodoItemResponse> update(
             @Parameter(description = "Todo list unique identifier", required = true)

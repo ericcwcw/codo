@@ -1,6 +1,7 @@
 package com.demo.codo.controller;
 
 import com.demo.codo.TestContainerConfig;
+import com.demo.codo.constant.TestUser;
 import com.demo.codo.dto.CollaboratorRequest;
 import com.demo.codo.dto.UserRequest;
 import com.demo.codo.entity.TodoList;
@@ -12,13 +13,18 @@ import com.demo.codo.repository.UserTodoListRepository;
 import com.demo.codo.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.TestExecutionEvent;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -38,6 +44,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(TestContainerConfig.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@WithUserDetails(value = TestUser.EMAIL, setupBefore = TestExecutionEvent.TEST_EXECUTION)
 public class CollaboratorControllerTest {
 
     private MockMvc mockMvc;
@@ -60,14 +68,32 @@ public class CollaboratorControllerTest {
     @Autowired
     private WebApplicationContext webApplicationContext;
 
-    private static final String TEST_NAME = "testuser";
-    private static final String TEST_EMAIL = "test@test.com";
-    private static final String TEST_PASSWORD = "testpass123";
 
     private User testUser;
     private User collaboratorUser;
     private TodoList testTodoList;
 
+
+    @BeforeAll
+    void setUpOnce() {
+        userRepository.deleteAll();
+
+        UserRequest newUserRequest = UserRequest.builder()
+                .name(TestUser.NAME)
+                .email(TestUser.EMAIL)
+                .password(TestUser.PASSWORD)
+                .build();
+
+        testUser = userService.create(newUserRequest);
+
+        collaboratorUser = User.builder()
+                .name("Collaborator User")
+                .email("collaborator@example.com")
+                .password("password")
+                .build();
+        collaboratorUser = userRepository.save(collaboratorUser);
+    }
+    
     @BeforeEach
     void setUp() {
         objectMapper.registerModule(new JavaTimeModule());
@@ -78,28 +104,9 @@ public class CollaboratorControllerTest {
                 .apply(springSecurity())
                 .build();
 
-        userTodoListRepository.deleteAll();
-        todoListRepository.deleteAll();
-        userRepository.deleteAll();
-
-        UserRequest newUserRequest = UserRequest.builder()
-                .name(TEST_NAME)
-                .email(TEST_EMAIL)
-                .password(TEST_PASSWORD)
-                .build();
-        try {
-            userService.create(newUserRequest);
-        } catch (com.demo.codo.exception.DuplicateUserException e) {
-            // User already exists, which is fine for test setup
-        }
-        testUser = userRepository.findByEmail(TEST_EMAIL).orElseThrow();
-
-        collaboratorUser = User.builder()
-                .name("Collaborator User")
-                .email("collaborator@example.com")
-                .password("password")
-                .build();
-        collaboratorUser = userRepository.save(collaboratorUser);
+//        userTodoListRepository.deleteAll();
+//        todoListRepository.deleteAll();
+//        userRepository.deleteAll();
 
         testTodoList = TodoList.builder()
                 .name("Test Todo List")
@@ -119,7 +126,7 @@ public class CollaboratorControllerTest {
     @Test
     void shouldGetEmptyCollaboratorsListInitially() throws Exception {
         mockMvc.perform(get("/api/v1/todo/lists/{listId}/collaborators", testTodoList.getId())
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD)))
+                        .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
     }
@@ -132,7 +139,7 @@ public class CollaboratorControllerTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/todo/lists/{listId}/collaborators", testTodoList.getId())
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
+                        .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -150,7 +157,7 @@ public class CollaboratorControllerTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/todo/lists/{listId}/collaborators", testTodoList.getId())
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
+                        .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -168,13 +175,13 @@ public class CollaboratorControllerTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/todo/lists/{listId}/collaborators", testTodoList.getId())
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
+                        .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/v1/todo/lists/{listId}/collaborators", testTodoList.getId())
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
+                        .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -194,9 +201,9 @@ public class CollaboratorControllerTest {
                 .canEdit(true)
                 .build();
 
-        mockMvc.perform(put("/api/v1/todo/lists/{listId}/collaborators/{userId}", 
+        mockMvc.perform(patch("/api/v1/todo/lists/{listId}/collaborators/{userId}",
                         testTodoList.getId(), collaboratorUser.getId())
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
+                        .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -216,11 +223,11 @@ public class CollaboratorControllerTest {
 
         mockMvc.perform(delete("/api/v1/todo/lists/{listId}/collaborators/{userId}", 
                         testTodoList.getId(), collaboratorUser.getId())
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD)))
+                        .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD)))
                 .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/v1/todo/lists/{listId}/collaborators", testTodoList.getId())
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD)))
+                        .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
     }
@@ -234,7 +241,7 @@ public class CollaboratorControllerTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/todo/lists/{listId}/collaborators", testTodoList.getId())
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
+                        .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -246,9 +253,9 @@ public class CollaboratorControllerTest {
                 .canEdit(true)
                 .build();
 
-        mockMvc.perform(put("/api/v1/todo/lists/{listId}/collaborators/{userId}", 
+        mockMvc.perform(patch("/api/v1/todo/lists/{listId}/collaborators/{userId}",
                         testTodoList.getId(), UUID.randomUUID())
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
+                        .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -258,11 +265,12 @@ public class CollaboratorControllerTest {
     void shouldFailToRemoveNonexistentCollaborator() throws Exception {
         mockMvc.perform(delete("/api/v1/todo/lists/{listId}/collaborators/{userId}", 
                         testTodoList.getId(), UUID.randomUUID())
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD)))
+                        .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD)))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
+    @WithAnonymousUser
     void shouldRequireAuthentication() throws Exception {
         mockMvc.perform(get("/api/v1/todo/lists/{listId}/collaborators", testTodoList.getId()))
                 .andExpect(status().isUnauthorized());

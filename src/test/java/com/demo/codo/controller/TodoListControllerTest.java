@@ -1,18 +1,26 @@
 package com.demo.codo.controller;
 
 import com.demo.codo.TestContainerConfig;
+import com.demo.codo.constant.TestUser;
 import com.demo.codo.dto.TodoListRequest;
 import com.demo.codo.dto.UserRequest;
+import com.demo.codo.entity.User;
+import com.demo.codo.repository.UserRepository;
 import com.demo.codo.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.TestExecutionEvent;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -29,6 +37,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestContainerConfig.class)
 @AutoConfigureWebMvc
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@WithUserDetails(value = TestUser.EMAIL, setupBefore = TestExecutionEvent.TEST_EXECUTION)
 class TodoListControllerTest {
     private MockMvc mockMvc;
     
@@ -38,11 +48,24 @@ class TodoListControllerTest {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     private ObjectMapper objectMapper;
 
-    private static final String TEST_NAME = "test";
-    private static final String TEST_EMAIL = "test@test.com";
-    private static final String TEST_PASSWORD = "testpass123";
+    @BeforeAll
+    void setUpOnce() {
+        userRepository.deleteAll();
+
+        UserRequest newUserRequest = UserRequest.builder()
+                .name(TestUser.NAME)
+                .email(TestUser.EMAIL)
+                .password(TestUser.PASSWORD)
+                .build();
+
+        userService.create(newUserRequest);
+    }
+
 
     @BeforeEach
     void setUp() {
@@ -54,17 +77,6 @@ class TodoListControllerTest {
                 .webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())
                 .build();
-
-        UserRequest newUserRequest = UserRequest.builder()
-                .name(TEST_NAME)
-                .email(TEST_EMAIL)
-                .password(TEST_PASSWORD)
-                .build();
-        try {
-            userService.create(newUserRequest);
-        } catch (com.demo.codo.exception.DuplicateUserException e) {
-            // User already exists, which is fine for test setup
-        }
     }
 
     @Test
@@ -72,7 +84,7 @@ class TodoListControllerTest {
         var request = new TodoListRequest("My Todo List", "A list for important tasks");
 
         mockMvc.perform(post("/api/v1/todo/lists")
-                .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -84,7 +96,7 @@ class TodoListControllerTest {
     @Test
     void shouldGetTodoListsWithPagination() throws Exception {
         mockMvc.perform(get("/api/v1/todo/lists")
-                .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
                 .param("page", "0")
                 .param("size", "10"))
                 .andExpect(status().isOk())
@@ -95,31 +107,78 @@ class TodoListControllerTest {
 
     @Test
     void shouldGetSingleTodoListById() throws Exception {
-        UUID listId = UUID.randomUUID();
+        var createRequest = new TodoListRequest("Test List", "Test description");
+        
+        String response = mockMvc.perform(post("/api/v1/todo/lists")
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        
+        var jsonNode = objectMapper.readTree(response);
+        String listId = jsonNode.get("id").asText();
         
         mockMvc.perform(get("/api/v1/todo/lists/{id}", listId)
-                .with(httpBasic(TEST_EMAIL, TEST_PASSWORD)))
-                .andExpect(status().isNotFound());
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(listId))
+                .andExpect(jsonPath("$.name").value("Test List"))
+                .andExpect(jsonPath("$.description").value("Test description"));
     }
 
     @Test
     void shouldUpdateTodoListSuccessfully() throws Exception {
-        UUID listId = UUID.randomUUID();
-        var request = new TodoListRequest("Updated List", "Updated description");
+        var createRequest = new TodoListRequest("Original List", "Original description");
+        
+        String response = mockMvc.perform(post("/api/v1/todo/lists")
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        
+        var jsonNode = objectMapper.readTree(response);
+        String listId = jsonNode.get("id").asText();
+        
+        var updateRequest = new TodoListRequest("Updated List", "Updated description");
 
         mockMvc.perform(patch("/api/v1/todo/lists/{id}", listId)
-                .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNotFound());
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(listId))
+                .andExpect(jsonPath("$.name").value("Updated List"))
+                .andExpect(jsonPath("$.description").value("Updated description"));
     }
 
     @Test
     void shouldDeleteTodoListSuccessfully() throws Exception {
-        UUID listId = UUID.randomUUID();
-
+        var createRequest = new TodoListRequest("List to Delete", "This list will be deleted");
+        
+        String response = mockMvc.perform(post("/api/v1/todo/lists")
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        
+        var jsonNode = objectMapper.readTree(response);
+        String listId = jsonNode.get("id").asText();
+        
         mockMvc.perform(delete("/api/v1/todo/lists/{id}", listId)
-                .with(httpBasic(TEST_EMAIL, TEST_PASSWORD)))
-                .andExpect(status().isNotFound());
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD)))
+                .andExpect(status().isNoContent());
+        
+        mockMvc.perform(get("/api/v1/todo/lists/{id}", listId)
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD)))
+                .andExpect(status().isForbidden());
     }
 }

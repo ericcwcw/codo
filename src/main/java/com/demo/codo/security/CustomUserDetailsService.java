@@ -55,7 +55,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         @Override
         public String getUsername() {
-            return name;
+            return email;
         }
     }
 }

@@ -6,7 +6,6 @@ import com.demo.codo.entity.User;
 import com.demo.codo.repository.UserRepository;
 import com.demo.codo.service.EmailSender;
 import com.demo.codo.service.TokenService;
-import com.demo.codo.service.UserService;
 import com.demo.codo.util.HashUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,20 +13,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -36,7 +33,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureWebMvc
 @ActiveProfiles("test")
 @Import(TestContainerConfig.class)
-@Transactional
 class UserControllerEmailVerificationTest {
 
     private MockMvc mockMvc;
@@ -59,22 +55,11 @@ class UserControllerEmailVerificationTest {
     @MockBean
     private EmailSender emailSender;
 
-    private static final String TEST_USERNAME = "testuser@example.com";
-    private static final String TEST_PASSWORD = "password123";
-
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         redisTemplate.getConnectionFactory().getConnection().flushAll();
         userRepository.deleteAll();
-
-        User testUser = User.builder()
-                .name("Test User")
-                .email(TEST_USERNAME)
-                .password("$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.") // "password"
-                .emailVerified(false)
-                .build();
-        userRepository.save(testUser);
     }
 
     @Test
@@ -86,7 +71,6 @@ class UserControllerEmailVerificationTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/users")
-                        .with(httpBasic(TEST_USERNAME, TEST_PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
@@ -113,7 +97,6 @@ class UserControllerEmailVerificationTest {
         String token = tokenService.generate(unverifiedUser.getId());
 
         mockMvc.perform(get("/api/v1/users/verify")
-                        .with(httpBasic(TEST_USERNAME, TEST_PASSWORD))
                         .param("token", token))
                 .andExpect(status().isOk())
                 .andExpect(content().json("{\"message\": \"Email verified successfully\"}"));
@@ -126,7 +109,6 @@ class UserControllerEmailVerificationTest {
     void shouldReturnBadRequestWithInvalidToken() throws Exception {
         String invalidToken = "invalid-token";
         mockMvc.perform(get("/api/v1/users/verify")
-                        .with(httpBasic(TEST_USERNAME, TEST_PASSWORD))
                         .param("token", invalidToken))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().json("{\"message\": \"Invalid or expired verification token\"}"));
@@ -147,7 +129,6 @@ class UserControllerEmailVerificationTest {
         redisTemplate.delete("email_verification:" + hashedToken);
 
         mockMvc.perform(get("/api/v1/users/verify")
-                        .with(httpBasic(TEST_USERNAME, TEST_PASSWORD))
                         .param("token", token))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().json("{\"message\": \"Invalid or expired verification token\"}"));
@@ -169,7 +150,6 @@ class UserControllerEmailVerificationTest {
         String token = tokenService.generate(verifiedUser.getId());
 
         mockMvc.perform(get("/api/v1/users/verify")
-                        .with(httpBasic(TEST_USERNAME, TEST_PASSWORD))
                         .param("token", token))
                 .andExpect(status().isOk())
                 .andExpect(content().json("{\"message\": \"Email verified successfully\"}"));
@@ -203,7 +183,6 @@ class UserControllerEmailVerificationTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/users")
-                        .with(httpBasic(TEST_USERNAME, TEST_PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
@@ -229,7 +208,6 @@ class UserControllerEmailVerificationTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/users")
-                        .with(httpBasic(TEST_USERNAME, TEST_PASSWORD))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())

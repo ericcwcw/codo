@@ -22,3 +22,8 @@ java -jar ./build/libs/codo-0.0.1-SNAPSHOT.jar
 5. Email verification during user registration
 6. Github action CI pipeline
 7. Setup testcontainers for integration tests
+
+
+
+1. fix verify user response text
+2. 

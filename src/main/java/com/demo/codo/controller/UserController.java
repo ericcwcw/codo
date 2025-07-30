@@ -92,7 +92,7 @@ public class UserController {
     @GetMapping("/verify")
     public ResponseEntity<String> verifyEmail(
             @Parameter(description = "Verification token from email", required = true)
-            @RequestParam(value = "token") String token) {
+            @RequestParam String token) {
         boolean verified = emailVerificationService.verifyEmail(token);
         if (verified) {
             return ResponseEntity.ok("{\"message\": \"Email verified successfully\"}");

@@ -18,7 +18,6 @@ import java.util.UUID;
 @Service
 public class TodoListAuthorizationService {
     private final UserTodoListRepository userTodoListRepository;
-    private final UserRepository userRepository;
 
     public void check(UUID listId, RequireListPermission.Permission permission) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -26,23 +25,18 @@ public class TodoListAuthorizationService {
             return;
         }
 
-        try {
-            UUID userId = getUserId(authentication);
-            UserTodoList userTodoList = userTodoListRepository.findByUserIdAndListId(userId, listId)
-                    .orElseThrow(() -> new AccessDeniedException("You do not have access to this todo list"));
+        UUID userId = getUserId(authentication);
+        UserTodoList userTodoList = userTodoListRepository.findByUserIdAndListId(userId, listId)
+                .orElseThrow(() -> new AccessDeniedException("You do not have access to this todo list"));
 
-            if (RequireListPermission.Permission.EDIT.equals(permission)) {
-                if (!userTodoList.getIsOwner() && !userTodoList.getIsEditable()) {
-                    throw new AccessDeniedException("You do not have permission to modify this resource. Read-only access.");
-                }
-            } else if (RequireListPermission.Permission.OWNER.equals(permission)) {
-                if (!userTodoList.getIsOwner()) {
-                    throw new AccessDeniedException("Only the owner can perform this operation");
-                }
+        if (RequireListPermission.Permission.EDIT.equals(permission)) {
+            if (!userTodoList.getIsOwner() && !userTodoList.getIsEditable()) {
+                throw new AccessDeniedException("You do not have permission to modify this resource. Read-only access.");
             }
-        } catch (RuntimeException e) {
-            // If user lookup fails, skip authorization (e.g., for create operations)
-            return;
+        } else if (RequireListPermission.Permission.OWNER.equals(permission)) {
+            if (!userTodoList.getIsOwner()) {
+                throw new AccessDeniedException("Only the owner can perform this operation");
+            }
         }
     }
     
@@ -53,9 +47,10 @@ public class TodoListAuthorizationService {
             return ((CustomUserDetails) principal).getId();
         }
         
-        String userEmail = authentication.getName();
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("Current user not found: " + userEmail));
-        return user.getId();
+//        String userEmail = authentication.getName();
+//        User user = userRepository.findByEmail(userEmail)
+//                .orElseThrow(() -> new RuntimeException("Current user not found: " + userEmail));
+//        return user.getId();
+        return null;
     }
 }

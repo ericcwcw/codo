@@ -1,10 +1,14 @@
 package com.demo.codo.security;
 
 import com.demo.codo.TestContainerConfig;
+import com.demo.codo.constant.TestUser;
 import com.demo.codo.dto.UserRequest;
+import com.demo.codo.repository.UserRepository;
 import com.demo.codo.service.UserService;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestContainerConfig.class)
 @AutoConfigureWebMvc
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AuthenticationIntegrationTest {
 
     @Autowired
@@ -30,12 +35,24 @@ class AuthenticationIntegrationTest {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private UserRepository userRepository;
 
     private MockMvc mockMvc;
 
-    private static final String TEST_NAME = "test";
-    private static final String TEST_EMAIL = "test@test.com";
-    private static final String TEST_PASSWORD = "testpass123";
+    @BeforeAll
+    void setUpOnce() {
+        userRepository.deleteAll();
+
+        UserRequest newUserRequest = UserRequest.builder()
+                .name(TestUser.NAME)
+                .email(TestUser.EMAIL)
+                .password(TestUser.PASSWORD)
+                .build();
+
+        userService.create(newUserRequest);
+    }
+
 
     @BeforeEach
     void setUp() {
@@ -43,23 +60,12 @@ class AuthenticationIntegrationTest {
                 .webAppContextSetup(context)
                 .apply(springSecurity())
                 .build();
-
-        UserRequest newUserRequest = UserRequest.builder()
-                .name(TEST_NAME)
-                .email(TEST_EMAIL)
-                .password(TEST_PASSWORD)
-                .build();
-        try {
-            userService.create(newUserRequest);
-        } catch (com.demo.codo.exception.DuplicateUserException e) {
-            // User already exists, which is fine for test setup
-        }
     }
 
     @Test
     void shouldAllowAccessWithValidCredentials() throws Exception {
         mockMvc.perform(get("/api/v1/todo/lists")
-                .with(httpBasic(TEST_EMAIL, TEST_PASSWORD)))
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD)))
                 .andExpect(status().isOk());
     }
 
@@ -72,14 +78,14 @@ class AuthenticationIntegrationTest {
     @Test
     void shouldDenyAccessWithInvalidCredentials() throws Exception {
         mockMvc.perform(get("/api/v1/todo/lists")
-                .with(httpBasic(TEST_EMAIL, "wrongpassword")))
+                .with(httpBasic(TestUser.EMAIL, "wrongpassword")))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void shouldDenyAccessWithNonExistentUser() throws Exception {
         mockMvc.perform(get("/api/v1/todo/lists")
-                .with(httpBasic("nonexistent", TEST_PASSWORD)))
+                .with(httpBasic("nonexistent", TestUser.PASSWORD)))
                 .andExpect(status().isUnauthorized());
     }
 
