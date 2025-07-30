@@ -4,15 +4,16 @@ import com.demo.codo.TestContainerConfig;
 import com.demo.codo.entity.User;
 import com.demo.codo.repository.UserRepository;
 import com.demo.codo.util.HashUtil;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -25,7 +26,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(TestContainerConfig.class)
-@Transactional
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EmailVerificationIntegrationTest {
 
     @Autowired
@@ -45,9 +46,9 @@ class EmailVerificationIntegrationTest {
 
     private User testUser;
 
-    @BeforeEach
-    void setUp() {
-        redisTemplate.getConnectionFactory().getConnection().flushAll();
+    @BeforeAll
+    void setUpOnce() {
+        userRepository.deleteAll();
         
         testUser = User.builder()
                 .name("Test User")
@@ -55,6 +56,14 @@ class EmailVerificationIntegrationTest {
                 .password("password123")
                 .emailVerified(false)
                 .build();
+        testUser = userRepository.save(testUser);
+    }
+    
+    @BeforeEach
+    void setUp() {
+        redisTemplate.getConnectionFactory().getConnection().flushAll();
+
+        testUser.setEmailVerified(false);
         testUser = userRepository.save(testUser);
     }
 

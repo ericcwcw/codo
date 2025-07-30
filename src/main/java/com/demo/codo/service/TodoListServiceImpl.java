@@ -1,7 +1,7 @@
 package com.demo.codo.service;
 
-import com.demo.codo.dto.TodoListRequest;
 import com.demo.codo.dto.TodoListDto;
+import com.demo.codo.dto.TodoListRequest;
 import com.demo.codo.entity.TodoList;
 import com.demo.codo.entity.User;
 import com.demo.codo.entity.UserTodoList;
@@ -10,6 +10,7 @@ import com.demo.codo.mapper.TodoListMapper;
 import com.demo.codo.repository.TodoListRepository;
 import com.demo.codo.repository.UserRepository;
 import com.demo.codo.repository.UserTodoListRepository;
+import com.demo.codo.security.CustomUserDetailsService.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,33 +33,23 @@ public class TodoListServiceImpl implements TodoListService {
 
     @Override
     public TodoListDto create(TodoListRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
         TodoList newList = TodoList.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .build();
 
         TodoList savedList = repository.save(newList);
-        
-        // Only create user-list relationship if user is authenticated and exists
-        if (authentication != null && authentication.getName() != null) {
-            String userEmail = authentication.getName();
-            Optional<User> currentUserOpt = userRepository.findByEmail(userEmail);
-            
-            if (currentUserOpt.isPresent()) {
-                User currentUser = currentUserOpt.get();
-                UserTodoList ownerRecord = UserTodoList.builder()
-                        .userId(currentUser.getId())
-                        .listId(savedList.getId())
-                        .isOwner(true)
-                        .isEditable(true)
-                        .build();
-                
-                userTodoListRepository.save(ownerRecord);
-            }
-        }
-        
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+        UserTodoList ownerRecord = UserTodoList.builder()
+                .userId(customUserDetails.getId())
+                .listId(savedList.getId())
+                .isOwner(true)
+                .isEditable(true)
+                .build();
+
+        userTodoListRepository.save(ownerRecord);
         return mapper.toDto(savedList);
     }
 

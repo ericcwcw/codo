@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -26,26 +25,25 @@ public class UserService {
 
     public User create(UserRequest request) {
         Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
-        if (existingUser.isEmpty()) {
-            User newUser = User.builder()
-                    .name(request.getName())
-                    .email(request.getEmail())
-                    .password(passwordEncoder.encode(request.getPassword()))
-                    .emailVerified(false)
-                    .build();
-            User savedUser = userRepository.save(newUser);
-            
-            try {
-                emailVerificationService.sendVerificationEmail(savedUser);
-                log.info("User created and verification email sent: {}", savedUser.getEmail());
-            } catch (Exception e) {
-                log.error("Failed to send verification email for user: {}", savedUser.getEmail(), e);
-            }
-            return savedUser;
-        } else {
+        if (existingUser.isPresent()) {
             log.debug("User with email {} already exists, skipping creation", request.getEmail());
             throw new DuplicateUserException("User with email " + request.getEmail() + " already exists");
         }
+        User newUser = User.builder()
+                .name(request.getName())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .emailVerified(false)
+                .build();
+        User savedUser = userRepository.save(newUser);
+
+        try {
+            emailVerificationService.sendVerificationEmail(savedUser);
+            log.info("User created and verification email sent: {}", savedUser.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send verification email for user: {}", savedUser.getEmail(), e);
+        }
+        return savedUser;
     }
 
     public Optional<UserResponse> findByEmail(String email) {
