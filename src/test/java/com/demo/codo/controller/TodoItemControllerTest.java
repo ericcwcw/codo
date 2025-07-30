@@ -25,7 +25,8 @@ import org.springframework.web.context.WebApplicationContext;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.core.Is.is;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -458,6 +459,184 @@ class TodoItemControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].name").value("Task 1"));
+    }
+
+    @Test
+    void shouldFilterTodoItemsBySpecificStatus() throws Exception {
+        createTodoItem("Todo Task", "Description 1", LocalDate.now(), TodoItemStatus.TODO);
+        createTodoItem("Completed Task", "Description 2", LocalDate.now(), TodoItemStatus.COMPLETED);
+        createTodoItem("In Progress Task", "Description 3", LocalDate.now(), TodoItemStatus.IN_PROGRESS);
+        createTodoItem("Another Todo Task", "Description 4", LocalDate.now(), TodoItemStatus.TODO);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("status", "TODO"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].status").value("TODO"))
+                .andExpect(jsonPath("$.content[1].status").value("TODO"));
+    }
+
+    @Test
+    void shouldFilterTodoItemsByCompletedStatus() throws Exception {
+        createTodoItem("Todo Task", "Description 1", LocalDate.now(), TodoItemStatus.TODO);
+        createTodoItem("Completed Task", "Description 2", LocalDate.now(), TodoItemStatus.COMPLETED);
+        createTodoItem("Another Completed Task", "Description 3", LocalDate.now(), TodoItemStatus.COMPLETED);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("status", "COMPLETED"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].status").value("COMPLETED"))
+                .andExpect(jsonPath("$.content[1].status").value("COMPLETED"));
+    }
+
+    @Test
+    void shouldFilterTodoItemsByInProgressStatus() throws Exception {
+        createTodoItem("Todo Task", "Description 1", LocalDate.now(), TodoItemStatus.TODO);
+        createTodoItem("In Progress Task", "Description 2", LocalDate.now(), TodoItemStatus.IN_PROGRESS);
+        createTodoItem("Completed Task", "Description 3", LocalDate.now(), TodoItemStatus.COMPLETED);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("status", "IN_PROGRESS"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].status").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$.content[0].name").value("In Progress Task"));
+    }
+
+    @Test
+    void shouldFilterTodoItemsByCancelledStatus() throws Exception {
+        createTodoItem("Todo Task", "Description 1", LocalDate.now(), TodoItemStatus.TODO);
+        createTodoItem("Cancelled Task", "Description 2", LocalDate.now(), TodoItemStatus.CANCELLED);
+        createTodoItem("Completed Task", "Description 3", LocalDate.now(), TodoItemStatus.COMPLETED);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("status", "CANCELLED"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].status").value("CANCELLED"))
+                .andExpect(jsonPath("$.content[0].name").value("Cancelled Task"));
+    }
+
+    @Test
+    void shouldFilterTodoItemsByDueDateFrom() throws Exception {
+        LocalDate today = LocalDate.now();
+        createTodoItem("Past Task", "Description 1", today.minusDays(2), TodoItemStatus.TODO);
+        createTodoItem("Today Task", "Description 2", today, TodoItemStatus.TODO);
+        createTodoItem("Future Task", "Description 3", today.plusDays(2), TodoItemStatus.TODO);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("dueDateFrom", today.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[*].name", containsInAnyOrder("Today Task", "Future Task")));
+    }
+
+    @Test
+    void shouldFilterTodoItemsByDueDateTo() throws Exception {
+        LocalDate today = LocalDate.now();
+        createTodoItem("Past Task", "Description 1", today.minusDays(2), TodoItemStatus.TODO);
+        createTodoItem("Today Task", "Description 2", today, TodoItemStatus.TODO);
+        createTodoItem("Future Task", "Description 3", today.plusDays(2), TodoItemStatus.TODO);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("dueDateTo", today.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[*].name", containsInAnyOrder("Past Task", "Today Task")));
+    }
+
+    @Test
+    void shouldFilterTodoItemsByDueDateRange() throws Exception {
+        LocalDate today = LocalDate.now();
+        createTodoItem("Past Task", "Description 1", today.minusDays(3), TodoItemStatus.TODO);
+        createTodoItem("Start Range Task", "Description 2", today.minusDays(1), TodoItemStatus.TODO);
+        createTodoItem("Middle Range Task", "Description 3", today, TodoItemStatus.TODO);
+        createTodoItem("End Range Task", "Description 4", today.plusDays(1), TodoItemStatus.TODO);
+        createTodoItem("Future Task", "Description 5", today.plusDays(3), TodoItemStatus.TODO);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("dueDateFrom", today.minusDays(1).toString())
+                .param("dueDateTo", today.plusDays(1).toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(3)))
+                .andExpect(jsonPath("$.content[*].name", containsInAnyOrder("Start Range Task", "Middle Range Task", "End Range Task")));
+    }
+
+    @Test
+    void shouldFilterTodoItemsByStatusAndDueDateRange() throws Exception {
+        LocalDate today = LocalDate.now();
+        createTodoItem("Todo Past", "Description 1", today.minusDays(1), TodoItemStatus.TODO);
+        createTodoItem("Todo Today", "Description 2", today, TodoItemStatus.TODO);
+        createTodoItem("Todo Future", "Description 3", today.plusDays(1), TodoItemStatus.TODO);
+        createTodoItem("Completed Today", "Description 4", today, TodoItemStatus.COMPLETED);
+        createTodoItem("Completed Future", "Description 5", today.plusDays(1), TodoItemStatus.COMPLETED);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("status", "TODO")
+                .param("dueDateFrom", today.toString())
+                .param("dueDateTo", today.plusDays(1).toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[*].name", containsInAnyOrder("Todo Today", "Todo Future")))
+                .andExpect(jsonPath("$.content[*].status", everyItem(is("TODO"))));
+    }
+
+    @Test
+    void shouldReturnEmptyWhenNoItemsMatchStatusFilter() throws Exception {
+        createTodoItem("Todo Task", "Description 1", LocalDate.now(), TodoItemStatus.TODO);
+        createTodoItem("Completed Task", "Description 2", LocalDate.now(), TodoItemStatus.COMPLETED);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("status", "IN_PROGRESS"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(0)))
+                .andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    @Test
+    void shouldReturnEmptyWhenNoItemsMatchDueDateFilter() throws Exception {
+        LocalDate today = LocalDate.now();
+        createTodoItem("Past Task", "Description 1", today.minusDays(5), TodoItemStatus.TODO);
+        createTodoItem("Future Task", "Description 2", today.plusDays(5), TodoItemStatus.TODO);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("dueDateFrom", today.toString())
+                .param("dueDateTo", today.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(0)))
+                .andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    @Test
+    void shouldCombineFilteringAndSorting() throws Exception {
+        LocalDate today = LocalDate.now();
+        createTodoItem("Z Todo Task", "Description 1", today, TodoItemStatus.TODO);
+        createTodoItem("A Todo Task", "Description 2", today, TodoItemStatus.TODO);
+        createTodoItem("M Todo Task", "Description 3", today, TodoItemStatus.TODO);
+        createTodoItem("Completed Task", "Description 4", today, TodoItemStatus.COMPLETED);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("status", "TODO")
+                .param("dueDateFrom", today.toString())
+                .param("sort", "name,asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(3)))
+                .andExpect(jsonPath("$.content[0].name").value("A Todo Task"))
+                .andExpect(jsonPath("$.content[1].name").value("M Todo Task"))
+                .andExpect(jsonPath("$.content[2].name").value("Z Todo Task"))
+                .andExpect(jsonPath("$.content[*].status", everyItem(is("TODO"))));
     }
 
     private void createTodoItem(String name, String description, LocalDate dueDate, TodoItemStatus status) throws Exception {
