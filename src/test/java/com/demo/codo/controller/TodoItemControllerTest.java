@@ -58,7 +58,6 @@ class TodoItemControllerTest {
     private ObjectMapper objectMapper;
 
     private TodoListDto testList;
-    private User testUser;
 
     @BeforeAll
     void setUpOnce() {
@@ -70,7 +69,7 @@ class TodoItemControllerTest {
                 .password(TestUser.PASSWORD)
                 .build();
 
-        testUser = userService.create(newUserRequest);
+        userService.create(newUserRequest);
     }
 
     @BeforeEach
@@ -327,5 +326,146 @@ class TodoItemControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldSortTodoItemsByStatusAscending() throws Exception {
+        createTodoItem("Task 1", "Description 1", LocalDate.now(), TodoItemStatus.COMPLETED);
+        createTodoItem("Task 2", "Description 2", LocalDate.now(), TodoItemStatus.TODO);
+        createTodoItem("Task 3", "Description 3", LocalDate.now(), TodoItemStatus.IN_PROGRESS);
+        createTodoItem("Task 4", "Description 4", LocalDate.now(), TodoItemStatus.CANCELLED);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("sort", "status,asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].status").value("CANCELLED"))
+                .andExpect(jsonPath("$.content[1].status").value("COMPLETED"))
+                .andExpect(jsonPath("$.content[2].status").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$.content[3].status").value("TODO"));
+    }
+
+    @Test
+    void shouldSortTodoItemsByStatusDescending() throws Exception {
+        createTodoItem("Task 1", "Description 1", LocalDate.now(), TodoItemStatus.COMPLETED);
+        createTodoItem("Task 2", "Description 2", LocalDate.now(), TodoItemStatus.TODO);
+        createTodoItem("Task 3", "Description 3", LocalDate.now(), TodoItemStatus.IN_PROGRESS);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("sort", "status,desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].status").value("TODO"))
+                .andExpect(jsonPath("$.content[1].status").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$.content[2].status").value("COMPLETED"));
+    }
+
+    @Test
+    void shouldSortTodoItemsByNameAscending() throws Exception {
+        createTodoItem("Zebra Task", "Description 1", LocalDate.now(), TodoItemStatus.TODO);
+        createTodoItem("Alpha Task", "Description 2", LocalDate.now(), TodoItemStatus.TODO);
+        createTodoItem("Beta Task", "Description 3", LocalDate.now(), TodoItemStatus.TODO);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("sort", "name,asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].name").value("Alpha Task"))
+                .andExpect(jsonPath("$.content[1].name").value("Beta Task"))
+                .andExpect(jsonPath("$.content[2].name").value("Zebra Task"));
+    }
+
+    @Test
+    void shouldSortTodoItemsByNameDescending() throws Exception {
+        createTodoItem("Alpha Task", "Description 1", LocalDate.now(), TodoItemStatus.TODO);
+        createTodoItem("Zebra Task", "Description 2", LocalDate.now(), TodoItemStatus.TODO);
+        createTodoItem("Beta Task", "Description 3", LocalDate.now(), TodoItemStatus.TODO);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("sort", "name,desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].name").value("Zebra Task"))
+                .andExpect(jsonPath("$.content[1].name").value("Beta Task"))
+                .andExpect(jsonPath("$.content[2].name").value("Alpha Task"));
+    }
+
+    @Test
+    void shouldSortTodoItemsByDueDateAscending() throws Exception {
+        createTodoItem("Task 1", "Description 1", LocalDate.now().plusDays(3), TodoItemStatus.TODO);
+        createTodoItem("Task 2", "Description 2", LocalDate.now().plusDays(1), TodoItemStatus.TODO);
+        createTodoItem("Task 3", "Description 3", LocalDate.now().plusDays(2), TodoItemStatus.TODO);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("sort", "dueDate,asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].name").value("Task 2"))
+                .andExpect(jsonPath("$.content[1].name").value("Task 3"))
+                .andExpect(jsonPath("$.content[2].name").value("Task 1"));
+    }
+
+    @Test
+    void shouldSortTodoItemsByDueDateDescending() throws Exception {
+        createTodoItem("Task 1", "Description 1", LocalDate.now().plusDays(1), TodoItemStatus.TODO);
+        createTodoItem("Task 2", "Description 2", LocalDate.now().plusDays(3), TodoItemStatus.TODO);
+        createTodoItem("Task 3", "Description 3", LocalDate.now().plusDays(2), TodoItemStatus.TODO);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("sort", "dueDate,desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].name").value("Task 2"))
+                .andExpect(jsonPath("$.content[1].name").value("Task 3"))
+                .andExpect(jsonPath("$.content[2].name").value("Task 1"));
+    }
+
+
+    @Test
+    void shouldSortTodoItemsWithMultipleSortFields() throws Exception {
+        createTodoItem("Zebra Task", "Description 1", LocalDate.now(), TodoItemStatus.TODO);
+        createTodoItem("Alpha Task", "Description 2", LocalDate.now(), TodoItemStatus.TODO);
+        createTodoItem("Beta Task", "Description 3", LocalDate.now(), TodoItemStatus.COMPLETED);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("sort", "status,asc")
+                .param("sort", "name,asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].name").value("Beta Task"))  // COMPLETED status first
+                .andExpect(jsonPath("$.content[1].name").value("Alpha Task"))  // TODO status, alphabetically first
+                .andExpect(jsonPath("$.content[2].name").value("Zebra Task")); // TODO status, alphabetically last
+    }
+
+    @Test
+    void shouldHandleEmptySortParameter() throws Exception {
+        createTodoItem("Task 1", "Description 1", LocalDate.now(), TodoItemStatus.TODO);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .param("sort", ""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].name").value("Task 1"));
+    }
+
+    @Test
+    void shouldHandleNoSortParameter() throws Exception {
+        createTodoItem("Task 1", "Description 1", LocalDate.now(), TodoItemStatus.TODO);
+
+        mockMvc.perform(get("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].name").value("Task 1"));
+    }
+
+    private void createTodoItem(String name, String description, LocalDate dueDate, TodoItemStatus status) throws Exception {
+        TodoItemRequest request = new TodoItemRequest(name, description, dueDate, status);
+        mockMvc.perform(post("/api/v1/todo/lists/{listId}/items", testList.getId())
+                .with(httpBasic(TestUser.EMAIL, TestUser.PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
     }
 }
